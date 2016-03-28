@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.application.*?>
+<?import javafx.beans.property.*?>
+<?import javafx.beans.value.*?>
+<?import javafx.collections.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Alert.*?>
+<?import javafx.scene.control.ButtonBar.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.stage.*?>
+<?import javafx.util.*?>
+<?import javafx.scene.layout.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.image.*?>
+
+<BorderPane fx:controller="xyz.ezstein.fx.main.SplitTimerController" xmlns:fx="fx" prefWidth="400" prefHeight="400">
+	<stylesheets>
+		<URL value="@SplitTimer.css" />
+	</stylesheets>
+	
+	
+	<MenuBar fx:id="mainMenuBar" useSystemMenuBar="true">
+		<menus>
+		<Menu fx:id="applicationMenu" text="SplitTimerApp">
+				<items>
+					<MenuItem text="About SplitTimerApp" onAction="#aboutMenuItemClick"/>
+					<SeparatorMenuItem/>
+					<MenuItem text="Preferences..." onAction="#preferencesMenuItemClick"/>
+					<SeparatorMenuItem/>
+					<MenuItem text="Quit" onAction="#quitMenuItemClick"/>
+				</items>
+			</Menu>
+			<Menu text="File">
+				<items>
+					<MenuItem text="New" onAction="#newMenuItemClick"/>
+					<MenuItem text="Save" onAction="#saveMenuItemClick"/>
+					<MenuItem text="Save As..." onAction="#saveAsMenuItemClick"/>
+				</items>
+			</Menu>
+			<Menu text="Edit">
+				<items>
+					<MenuItem text="Options..." onAction="#optionsMenuItemClick"/>
+					<SeparatorMenuItem />
+					<MenuItem text="Start" onAction="#startMenuItemClick"/>
+					<MenuItem text="Pause" onAction="#pauseMenuItemClick"/>
+					<MenuItem text="Stop" onAction="#stopMenuItemClick"/>
+				</items>
+			</Menu>
+		</menus>
+	</MenuBar>
+	
+	<center>
+		<VBox spacing="10">
+			<padding>
+				<Insets top="10" bottom="10" left="10" right="10"/>
+			</padding>
+			<HBox spacing="10">
+				<padding>
+					<Insets top="10" bottom="10" left="10" right="10"/>
+				</padding>
+				<Label fx:id="timeLabel" text="00:00:00"/>
+				<Button onAction="#startButtonClick" text="Start"/>
+			</HBox>
+		</VBox>
+	</center>
+</BorderPane>
