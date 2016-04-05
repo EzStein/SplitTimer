@@ -1,15 +1,12 @@
 package xyz.ezstein.backend;
 
-import java.awt.List;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-
+import java.util.*;
 import javafx.application.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.stage.*;
-import xyz.ezstein.fx.main.SplitTimerController;
+import xyz.ezstein.fx.main.*;
 
 /**
  * This class launches the application
@@ -42,10 +39,14 @@ public class SplitTimerGUILauncher extends Application {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		//SplitTimerController controller = loader.getController();
-		//controller.initializeAsGUI();
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
+		
+		SplitTimerController controller = loader.getController();
+		controller.initializeAsGUI(stage,scene);
+		
+		
+		
 		stage.show();
 		
 	}

@@ -32,7 +32,7 @@
 	
 	<MenuBar fx:id="mainMenuBar" useSystemMenuBar="true">
 		<menus>
-		<Menu fx:id="applicationMenu" text="SplitTimerApp">
+			<Menu fx:id="applicationMenu" text="SplitTimerApp">
 				<items>
 					<MenuItem text="About SplitTimerApp" onAction="#aboutMenuItemClick"/>
 					<SeparatorMenuItem/>
@@ -65,13 +65,23 @@
 			<padding>
 				<Insets top="10" bottom="10" left="10" right="10"/>
 			</padding>
+			
+			<TableView fx:id="splitEventTable">
+				<columns>
+					<TableColumn fx:id="nameTableColumn" text="Name"/>
+					<TableColumn fx:id="timeTableColumn" text="Time"/>
+					<TableColumn fx:id="iconTableColumn" text="Icon"/>
+					<TableColumn fx:id="splitTimeTableColumn" text="Split Time"/>
+				</columns>
+			</TableView>
 			<HBox spacing="10">
 				<padding>
 					<Insets top="10" bottom="10" left="10" right="10"/>
 				</padding>
 				<Label fx:id="timeLabel" text="00:00:00"/>
-				<Button onAction="#startButtonClick" text="Start"/>
+				<Button fx:id="startButton" onAction="#startButtonClick" text="Start"/>
 			</HBox>
 		</VBox>
 	</center>
 </BorderPane>
+
