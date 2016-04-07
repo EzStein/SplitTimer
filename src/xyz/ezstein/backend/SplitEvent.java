@@ -1,6 +1,7 @@
 package xyz.ezstein.backend;
 
 import java.io.*;
+import java.util.*;
 
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -8,21 +9,19 @@ import javafx.beans.value.ObservableValue;
 
 public class SplitEvent implements Serializable {
 	private SimpleStringProperty name;
-	private SimpleLongProperty time;
-	private SimpleLongProperty splitTime;
 	private SimpleStringProperty icon;
 	private SimpleIntegerProperty positionId;
+	private HashMap<Integer, Long> times;
 	
-	public SplitEvent(String name, long time, long splitTime, String icon, int positionId){
+	public SplitEvent(String name, String icon, int positionId){
 		this.name=new SimpleStringProperty(name);
-		this.time=new SimpleLongProperty(time);
-		this.splitTime=new SimpleLongProperty(splitTime);
 		this.icon=new SimpleStringProperty(icon);
 		this.positionId=new SimpleIntegerProperty(positionId);
+		times=new HashMap<Integer, Long>();
 	}
 	
 	public SplitEvent(){
-		this("abc", 0,0,"123",0);
+		this("abc","123",0);
 	}
 	
 	public SimpleStringProperty nameProperty(){
@@ -32,22 +31,30 @@ public class SplitEvent implements Serializable {
 	public SimpleStringProperty iconProperty(){
 		return icon;
 	}
-	public SimpleLongProperty timeProperty(){
+	public SimpleLongProperty timeProperty(int i){
+		return new SimpleLongProperty(times.get(i));
+	}
+	
+	public long getBestTime(){
+		long time = Long.MAX_VALUE;
+		for(long t : times.values()){
+			time=Math.min(time, t);
+		}
 		return time;
 	}
-	public SimpleLongProperty splitTimeProperty(){
-		return splitTime;
-	}
+	
 	public SimpleIntegerProperty positionIdProperty(){
 		return positionId;
+	}
+	
+	public HashMap<Integer, Long> getTimes(){
+		return times;
 	}
 	
 	private void writeObject(ObjectOutputStream out) throws IOException {
 		out.defaultWriteObject();
 		out.writeObject(name.get());
 		out.writeObject(icon.get());
-		out.writeLong(time.get());
-		out.writeLong(splitTime.get());
 		out.writeInt(positionId.get());
 	}
 	
@@ -55,8 +62,6 @@ public class SplitEvent implements Serializable {
 		in.defaultReadObject();
 		this.name = new SimpleStringProperty((String) in.readObject());
 		this.icon = new SimpleStringProperty((String) in.readObject());
-		this.time = new SimpleLongProperty(in.readLong());
-		this.splitTime = new SimpleLongProperty(in.readLong());
 		this.positionId = new SimpleIntegerProperty(in.readInt());
 	}
 	
@@ -72,9 +77,8 @@ public class SplitEvent implements Serializable {
 			SplitEvent se = (SplitEvent) object;
 			if(se.nameProperty().equals(name) && 
 					se.iconProperty().equals(icon) &&
-					se.timeProperty().equals(time) &&
-					se.splitTimeProperty().equals(splitTime) &&
-					se.positionIdProperty().equals(positionId)){
+					se.positionIdProperty().equals(positionId) &&
+					se.getTimes().equals(times)){
 				return true;
 			}
 		}
@@ -83,6 +87,6 @@ public class SplitEvent implements Serializable {
 	
 	@Override
 	public int hashCode(){
-		return name.hashCode()+icon.hashCode()+time.hashCode()+splitTime.hashCode()+positionId.hashCode();
+		return name.hashCode()+icon.hashCode()+times.hashCode()+positionId.hashCode();
 	}
 }

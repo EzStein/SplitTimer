@@ -1,16 +1,18 @@
 package xyz.ezstein.fx.options;
 
+import java.io.*;
+
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.collections.*;
+import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.control.*;
-import javafx.scene.control.TableColumn.CellDataFeatures;
-import javafx.scene.control.TableColumn.CellEditEvent;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.TableColumn.*;
+import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
-import javafx.util.Callback;
+import javafx.stage.*;
+import javafx.util.*;
 import xyz.ezstein.backend.*;
 
 public class OptionsController {
@@ -20,24 +22,23 @@ public class OptionsController {
 	@FXML private TableColumn<SplitEvent, String> iconTableColumn;
 	@FXML private TableColumn<SplitEvent, Number> splitTimeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
-	private final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+	
 	public void initialize(){
 		System.out.println("OPTIONS INITIALIZED");
 		initializeAsGUI();
 	}
 	
 	public void initializeAsGUI(){
-		splitEventTable.setEditable(true);
 		timeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
-				return splitEvent.getValue().timeProperty();
+				return new SimpleLongProperty(0);
 			}
 		});
 		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
-				return splitEvent.getValue().splitTimeProperty();
+				return new SimpleLongProperty(0);
 			}
 		});
 		
@@ -80,58 +81,9 @@ public class OptionsController {
 		splitEventTable.setItems(FXCollections.observableArrayList(new SplitEvent()));
 		
 		splitEventTable.setRowFactory(new Callback<TableView<SplitEvent>,TableRow<SplitEvent>>(){
-
 			@Override
 			public TableRow<SplitEvent> call(TableView<SplitEvent> tableView) {
-				TableRow<SplitEvent> row = new TableRow<SplitEvent>();
-				
-				
-				
-				 row.setOnDragDetected(event -> {
-		                if (! row.isEmpty()) {
-		                    Integer index = row.getIndex();
-		                    Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
-		                    db.setDragView(row.snapshot(null, null));
-		                    ClipboardContent cc = new ClipboardContent();
-		                    cc.put(SERIALIZED_MIME_TYPE, index);
-		                    db.setContent(cc);
-		                    event.consume();
-		                }
-		            });
-
-		            row.setOnDragOver(event -> {
-		                Dragboard db = event.getDragboard();
-		                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-		                    if (row.getIndex() != ((Integer)db.getContent(SERIALIZED_MIME_TYPE)).intValue()) {
-		                        event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-		                        event.consume();
-		                    }
-		                }
-		            });
-
-		            row.setOnDragDropped(event -> {
-		                Dragboard db = event.getDragboard();
-		                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-		                    int draggedIndex = (Integer) db.getContent(SERIALIZED_MIME_TYPE);
-		                    SplitEvent draggedPerson = tableView.getItems().remove(draggedIndex);
-
-		                    int dropIndex ; 
-
-		                    if (row.isEmpty()) {
-		                        dropIndex = tableView.getItems().size() ;
-		                    } else {
-		                        dropIndex = row.getIndex();
-		                    }
-
-		                    tableView.getItems().add(dropIndex, draggedPerson);
-
-		                    event.setDropCompleted(true);
-		                    tableView.getSelectionModel().select(dropIndex);
-		                    event.consume();
-		                }
-		            });
-				
-				return row;
+				return new CustomTableRow();
 			}
 			
 		});
@@ -140,7 +92,7 @@ public class OptionsController {
 	
 	@FXML
 	private void addEventButtonClick(ActionEvent ae){
-		splitEventTable.getItems().add(new SplitEvent("123",100,100,"123",0));
+		splitEventTable.getItems().add(new SplitEvent());
 	}
 	
 	@FXML
@@ -149,7 +101,28 @@ public class OptionsController {
 	}
 	
 	@FXML
-	private void randomize(ActionEvent ae){
-		splitEventTable.getItems().get(0).nameProperty().set(""+Math.random());
+	private void saveButtonClick(ActionEvent ae){
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Save...");
+		File file = null;
+		if((file = fileChooser.showSaveDialog(null))==null){
+			return;
+		}
+		SplitCollection collection = new SplitCollection();
+		int i =0;
+		for(SplitEvent event: splitEventTable.getItems()){
+			event.positionIdProperty().set(i);
+			collection.getSplitEvents().add(event);
+			i++;
+		}
+		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
+			out.writeObject(collection);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

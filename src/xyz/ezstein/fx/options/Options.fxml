@@ -48,7 +48,7 @@
 				</padding>
 				<Button text="Add Event" onAction="#addEventButtonClick"/>
 				<Button text="Remove Event" onAction="#removeEventButtonClick"/>
-				<Button text="RANDOMIZE" onAction="#randomize"/>
+				<Button text="Save" onAction="#saveButtonClick"/>
 			</HBox>
 		</VBox>
 	</center>

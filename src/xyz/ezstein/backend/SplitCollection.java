@@ -1,57 +1,54 @@
 package xyz.ezstein.backend;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+import java.io.*;
+import java.util.*;
 
 public class SplitCollection implements Serializable {
-	private ArrayList<SplitSession> splitSessions;
-	private long targetTime;
+	private final ArrayList<SplitEvent> splitEvents;
+	private final String name;
 	
-	public SplitCollection(ArrayList<SplitSession> splitSessions, long targetTime){
-		this.splitSessions=splitSessions;
-		this.targetTime=targetTime;
+	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents){
+		this.name=name;
+		this.splitEvents=splitEvents;
 	}
-	
 	public SplitCollection(){
-		this(new ArrayList<SplitSession>(), 0);
+		this("default", new ArrayList<SplitEvent>());
 	}
 	
-	public ArrayList<SplitSession> getSplitSessions(){
-		return splitSessions;
+	public SplitCollection(String name){
+		this(name, new ArrayList<SplitEvent>());
 	}
 	
-	public long getTargetTime(){
-		return targetTime;
+	public long getSessionTime(int i){
+		long time = 0;
+		for(SplitEvent event : splitEvents){
+			time += event.getTimes().get(i);
+		}
+		return time;
 	}
 	
 	public long getBestSessionTime(){
 		long time = Long.MAX_VALUE;
-		for(SplitSession session: splitSessions){
-			time = Math.min(time, session.getTime());
+		for(int i=0; i<splitEvents.get(0).getTimes().size(); i++){
+			time = Math.min(time, getSessionTime(i));
 		}
 		return time;
 	}
 	
 	public long getSumOfBestEventTimes(){
-		if(splitSessions.isEmpty()){
-			return -1;
+		long time = 0;
+		for(SplitEvent event:splitEvents){
+			time+=event.getBestTime();
 		}
-		int events = splitSessions.get(0).getSplitEvents().size();
-		long[] timesInEachEvent = new long[events];
-		for(int i=0;i<events;i++){
-			timesInEachEvent[i] = Long.MAX_VALUE;
-		}
-		for(SplitSession session: splitSessions){
-			for(SplitEvent event:session.getSplitEvents()){
-				timesInEachEvent[event.positionIdProperty().get()] = 
-						Math.min(timesInEachEvent[event.positionIdProperty().get()], event.timeProperty().get());
-			}
-		}
-		long totalTime=0;
-		for(int i=0;i<events;i++){
-			totalTime += timesInEachEvent[i];
-		}
-		return totalTime;
+		return time;
+	}
+	
+	public ArrayList<SplitEvent> getSplitEvents(){
+		return splitEvents;
+	}
+	
+	public String getName(){
+		return name;
 	}
 	
 	@Override
@@ -63,8 +60,8 @@ public class SplitCollection implements Serializable {
 			return true;
 		}
 		if(object instanceof SplitCollection){
-			SplitCollection sc = (SplitCollection) object;
-			if(sc.getSplitSessions().equals(splitSessions)&&sc.getTargetTime()==targetTime){
+			SplitCollection sp = (SplitCollection) object;
+			if(sp.getSplitEvents().equals(splitEvents) && sp.getName().equals(name)){
 				return true;
 			}
 		}
@@ -73,6 +70,6 @@ public class SplitCollection implements Serializable {
 	
 	@Override
 	public int hashCode(){
-		return (int)(targetTime*123)+splitSessions.hashCode();
+		return splitEvents.hashCode()+name.hashCode();
 	}
 }

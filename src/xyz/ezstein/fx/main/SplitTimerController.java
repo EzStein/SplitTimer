@@ -63,7 +63,7 @@ public class SplitTimerController {
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
 				// TODO Auto-generated method stub
-				return splitEvent.getValue().timeProperty();
+				return new SimpleLongProperty(0);
 			}
 		});
 		
@@ -72,7 +72,7 @@ public class SplitTimerController {
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
 				// TODO Auto-generated method stub
-				return splitEvent.getValue().splitTimeProperty();
+				return new SimpleLongProperty(0);
 			}
 		});
 		nameTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
