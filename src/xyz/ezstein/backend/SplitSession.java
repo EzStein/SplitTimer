@@ -4,8 +4,9 @@ import java.io.*;
 import java.util.*;
 
 public class SplitSession implements Serializable {
-	private ArrayList<SplitEvent> splitEvents;
-	private String name;
+	private final ArrayList<SplitEvent> splitEvents;
+	private final String name;
+	
 	public SplitSession(String name, ArrayList<SplitEvent> splitEvents){
 		this.name=name;
 		this.splitEvents=splitEvents;
@@ -24,5 +25,31 @@ public class SplitSession implements Serializable {
 	
 	public ArrayList<SplitEvent> getSplitEvents(){
 		return splitEvents;
+	}
+	
+	public String getName(){
+		return name;
+	}
+	
+	@Override
+	public boolean equals(Object object){
+		if(object==null){
+			return false;
+		}
+		if(object==this){
+			return true;
+		}
+		if(object instanceof SplitSession){
+			SplitSession sp = (SplitSession) object;
+			if(sp.getSplitEvents().equals(splitEvents) && sp.getName().equals(name)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return splitEvents.hashCode()+name.hashCode();
 	}
 }

@@ -3,6 +3,8 @@ package xyz.ezstein.backend;
 import java.io.*;
 
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 
 public class SplitEvent implements Serializable {
 	private SimpleStringProperty name;
@@ -24,6 +26,7 @@ public class SplitEvent implements Serializable {
 	}
 	
 	public SimpleStringProperty nameProperty(){
+		
 		return name;
 	}
 	public SimpleStringProperty iconProperty(){
@@ -55,5 +58,31 @@ public class SplitEvent implements Serializable {
 		this.time = new SimpleLongProperty(in.readLong());
 		this.splitTime = new SimpleLongProperty(in.readLong());
 		this.positionId = new SimpleIntegerProperty(in.readInt());
+	}
+	
+	@Override
+	public boolean equals(Object object){
+		if(object==null){
+			return false;
+		}
+		if(object==this){
+			return true;
+		}
+		if(object instanceof SplitEvent){
+			SplitEvent se = (SplitEvent) object;
+			if(se.nameProperty().equals(name) && 
+					se.iconProperty().equals(icon) &&
+					se.timeProperty().equals(time) &&
+					se.splitTimeProperty().equals(splitTime) &&
+					se.positionIdProperty().equals(positionId)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return name.hashCode()+icon.hashCode()+time.hashCode()+splitTime.hashCode()+positionId.hashCode();
 	}
 }

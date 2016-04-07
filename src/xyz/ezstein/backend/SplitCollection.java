@@ -53,4 +53,26 @@ public class SplitCollection implements Serializable {
 		}
 		return totalTime;
 	}
+	
+	@Override
+	public boolean equals(Object object){
+		if(object==null){
+			return false;
+		}
+		if(object==this){
+			return true;
+		}
+		if(object instanceof SplitCollection){
+			SplitCollection sc = (SplitCollection) object;
+			if(sc.getSplitSessions().equals(splitSessions)&&sc.getTargetTime()==targetTime){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return (int)(targetTime*123)+splitSessions.hashCode();
+	}
 }

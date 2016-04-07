@@ -1,0 +1,20 @@
+EditableNameTableCell TextField {
+	-fx-background-color: -fx-control-inner-background;
+	-fx-background-insets: 0;
+	-fx-background-radius: 0;
+	-fx-padding: 3 5 3 5;
+	-fx-prompt-text-fill: derive(-fx-control-inner-background,-30%);
+	-fx-cursor: text;
+}
+
+EditableNameTableCell TextField:hover {
+	-fx-background-color: derive(purple,90%), -fx-text-box-border, derive(-fx-control-inner-background, 10%); 
+	-fx-background-insets: 1, 2.8, 3.8; 
+	-fx-background-radius: 3.4, 2, 2;
+}
+
+EditableNameTableCell TextField:focused {
+	-fx-background-color: purple, -fx-text-box-border, -fx-control-inner-background; 
+	-fx-background-insets: -0.4, 1, 2; 
+	-fx-background-radius: 3.4, 2, 2;
+}

@@ -14,6 +14,7 @@ import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.*;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.*;
 import javafx.util.*;
 
@@ -65,6 +66,8 @@ public class SplitTimerController {
 				return splitEvent.getValue().timeProperty();
 			}
 		});
+		
+		
 		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
@@ -79,6 +82,8 @@ public class SplitTimerController {
 				return splitEvent.getValue().nameProperty();
 			}
 		});
+		
+		
 		iconTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<SplitEvent, String> splitEvent) {
@@ -86,6 +91,7 @@ public class SplitTimerController {
 				return splitEvent.getValue().iconProperty();
 			}
 		});
+		
 		
 		splitEventTable.setItems(FXCollections.observableArrayList(new SplitEvent()));
 	}
@@ -149,8 +155,22 @@ public class SplitTimerController {
 	}
 	@FXML
 	private void newMenuItemClick(ActionEvent ae){
+		Parent root = null;
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
 		
+		try {
+			root = loader.load();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(1);
+		}
+		Stage stage = new Stage();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 	}
+	
 	@FXML
 	private void saveMenuItemClick(ActionEvent ae){
 		

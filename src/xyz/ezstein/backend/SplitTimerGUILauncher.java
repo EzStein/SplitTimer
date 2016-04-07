@@ -45,8 +45,6 @@ public class SplitTimerGUILauncher extends Application {
 		SplitTimerController controller = loader.getController();
 		controller.initializeAsGUI(stage,scene);
 		
-		
-		
 		stage.show();
 		
 	}
