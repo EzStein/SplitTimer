@@ -43,7 +43,8 @@
 			</Menu>
 			<Menu text="File">
 				<items>
-					<MenuItem text="New" onAction="#newMenuItemClick"/>
+					<MenuItem text="New..." onAction="#newMenuItemClick"/>
+					<MenuItem text="Open..." onAction="#openMenuItemClick"/>
 					<MenuItem text="Save" onAction="#saveMenuItemClick"/>
 					<MenuItem text="Save As..." onAction="#saveAsMenuItemClick"/>
 				</items>

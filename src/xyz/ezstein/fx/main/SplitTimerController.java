@@ -1,9 +1,11 @@
 package xyz.ezstein.fx.main;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.util.concurrent.*;
 
 import de.codecentric.centerdevice.*;
+import xyz.ezstein.backend.app.*;
+import xyz.ezstein.fx.options.OptionsController;
 import xyz.ezstein.backend.*;
 import javafx.application.*;
 import javafx.beans.property.*;
@@ -14,7 +16,7 @@ import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.*;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.cell.*;
 import javafx.stage.*;
 import javafx.util.*;
 
@@ -23,6 +25,7 @@ public class SplitTimerController {
 	private Stage stage;
 	private Scene scene;
 	private Updater updater;
+	private SplitCollection currentSplitCollection;
 	@FXML private Label timeLabel;
 	@FXML private MenuBar mainMenuBar;
 	@FXML private Menu applicationMenu;
@@ -91,9 +94,6 @@ public class SplitTimerController {
 				return splitEvent.getValue().iconProperty();
 			}
 		});
-		
-		
-		splitEventTable.setItems(FXCollections.observableArrayList(new SplitEvent()));
 	}
 	
 	private class Updater implements Runnable {
@@ -147,6 +147,19 @@ public class SplitTimerController {
 		stage.close();
 	}
 	
+	public void open(File file) throws FileNotFoundException{
+		try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))){
+			currentSplitCollection = (SplitCollection)in.readObject();
+			splitEventTable.setItems(currentSplitCollection.splitEventsProperty());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@FXML
 	private void startButtonClick(ActionEvent ae){
 		updater = new Updater();
@@ -165,16 +178,34 @@ public class SplitTimerController {
 				e.printStackTrace();
 				System.exit(1);
 		}
+		
 		Stage stage = new Stage();
+		OptionsController oc = ((OptionsController) loader.getController());
+		oc.initializeAsGUI(stage);
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
 		stage.show();
 	}
 	
 	@FXML
+	private void openMenuItemClick(ActionEvent ae){
+		FileChooser fc = new FileChooser();
+		File file = null;
+		if((file = fc.showOpenDialog(null))==null){
+			return;
+		}
+		try {
+			open(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@FXML
 	private void saveMenuItemClick(ActionEvent ae){
 		
 	}
+	
 	@FXML
 	private void saveAsMenuItemClick(ActionEvent ae){
 		
@@ -184,10 +215,12 @@ public class SplitTimerController {
 	private void optionsMenuItemClick(ActionEvent ae){
 		
 	}
+	
 	@FXML
 	private void startMenuItemClick(ActionEvent ae){
 		
 	}
+	
 	@FXML
 	private void stopMenuItemClick(ActionEvent ae){
 		

@@ -1,4 +1,4 @@
-package xyz.ezstein.backend;
+package xyz.ezstein.backend.app;
 
 /**
  * An enum holding information about different operating systems.

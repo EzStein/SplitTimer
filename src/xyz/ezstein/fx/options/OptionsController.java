@@ -22,13 +22,38 @@ public class OptionsController {
 	@FXML private TableColumn<SplitEvent, String> iconTableColumn;
 	@FXML private TableColumn<SplitEvent, Number> splitTimeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
-	
+	private SplitCollection splitCollection;
+	private Callback<SplitCollection, Void> callBackOnClose;
 	public void initialize(){
 		System.out.println("OPTIONS INITIALIZED");
-		initializeAsGUI();
 	}
 	
-	public void initializeAsGUI(){
+	/*public void initializeAsGUI(Stage stage, SplitCollection splitCollection){
+		initializeAsGUI(stage);
+		this.splitCollection=splitCollection;
+		splitEventTable.setItems(FXCollections.observableArrayList(splitCollection.getSplitEvents()));
+		splitEventTable.itemsProperty().bindBidirectional(other);
+	}*/
+	
+	public void initializeAsGUI(Stage stage){
+		splitCollection = new SplitCollection();
+		splitCollection.splitEventsProperty().addListener((a,oldValue,newValue)->{
+			System.out.println(newValue);
+		});
+		splitEventTable.setItems(splitCollection.splitEventsProperty());
+		
+		/*int i =0;
+		for(SplitEvent event: splitEventTable.getItems()){
+			event.positionIdProperty().set(i);
+			collection.getSplitEvents().add(event);
+			i++;
+		}*/
+		stage.setOnCloseRequest(we->{
+			we.consume();
+			
+			close();
+			stage.close();
+		});
 		timeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
@@ -73,13 +98,6 @@ public class OptionsController {
 			}
 		});
 		
-		
-		
-		
-		
-		
-		splitEventTable.setItems(FXCollections.observableArrayList(new SplitEvent()));
-		
 		splitEventTable.setRowFactory(new Callback<TableView<SplitEvent>,TableRow<SplitEvent>>(){
 			@Override
 			public TableRow<SplitEvent> call(TableView<SplitEvent> tableView) {
@@ -89,6 +107,19 @@ public class OptionsController {
 		});
 		
 	}
+	
+	public void close(){
+		if(callBackOnClose!=null){
+			
+			callBackOnClose.call(splitCollection);
+		}
+	}
+	
+	public void setOnClose(Callback callBack){
+		callBackOnClose=callBack;
+	}
+	
+	
 	
 	@FXML
 	private void addEventButtonClick(ActionEvent ae){
@@ -108,15 +139,9 @@ public class OptionsController {
 		if((file = fileChooser.showSaveDialog(null))==null){
 			return;
 		}
-		SplitCollection collection = new SplitCollection();
-		int i =0;
-		for(SplitEvent event: splitEventTable.getItems()){
-			event.positionIdProperty().set(i);
-			collection.getSplitEvents().add(event);
-			i++;
-		}
+		
 		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
-			out.writeObject(collection);
+			out.writeObject(splitCollection);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

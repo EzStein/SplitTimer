@@ -1,4 +1,4 @@
-package xyz.ezstein.backend;
+package xyz.ezstein.backend.app;
 import java.io.*;
 import java.nio.file.*;
 import java.util.List;

@@ -9,12 +9,12 @@ import xyz.ezstein.backend.*;
 
 public class CustomTableRow extends TableRow<SplitEvent> {
 	
-	private final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+	private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 	
 	public CustomTableRow(){
 		
 		
-		TableView<SplitEvent> tableView = super.getTableView();
+		
 		this.setOnDragDetected(event -> {
 			
 			if (! isEmpty()) {
@@ -39,6 +39,7 @@ public class CustomTableRow extends TableRow<SplitEvent> {
 	   });
 	
 	   this.setOnDragDropped(event -> {
+		   TableView<SplitEvent> tableView = super.getTableView();
 	       Dragboard db = event.getDragboard();
 	       if (db.hasContent(SERIALIZED_MIME_TYPE)) {
 	           int draggedIndex = (Integer) db.getContent(SERIALIZED_MIME_TYPE);

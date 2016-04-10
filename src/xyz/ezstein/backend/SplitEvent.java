@@ -7,21 +7,31 @@ import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
+/**
+ * Represents a split event that can be viewed in a table.
+ * @author Ezra Stein
+ * @since 2016
+ * @version 1.0
+ */
 public class SplitEvent implements Serializable {
-	private SimpleStringProperty name;
-	private SimpleStringProperty icon;
-	private SimpleIntegerProperty positionId;
-	private HashMap<Integer, Long> times;
+	private transient SimpleStringProperty name;
+	private transient SimpleStringProperty icon;
+	private transient SimpleIntegerProperty positionId;
+	private HashMap<SplitSession, Long> times;
 	
 	public SplitEvent(String name, String icon, int positionId){
 		this.name=new SimpleStringProperty(name);
 		this.icon=new SimpleStringProperty(icon);
 		this.positionId=new SimpleIntegerProperty(positionId);
-		times=new HashMap<Integer, Long>();
+		times=new HashMap<SplitSession, Long>();
 	}
 	
 	public SplitEvent(){
 		this("abc","123",0);
+	}
+	
+	public void addSession(SplitSession splitSession, long time){
+		times.put(splitSession, time);
 	}
 	
 	public SimpleStringProperty nameProperty(){
@@ -43,12 +53,20 @@ public class SplitEvent implements Serializable {
 		return time;
 	}
 	
+	public Collection<SplitSession> getSplitSessions(){
+		return Collections.unmodifiableCollection(times.keySet());
+	}
+	
 	public SimpleIntegerProperty positionIdProperty(){
 		return positionId;
 	}
 	
-	public HashMap<Integer, Long> getTimes(){
-		return times;
+	public long getTime(SplitSession ss){
+		return times.get(ss);
+	}
+	
+	public HashMap<SplitSession, Long> getTimes(){
+		return (HashMap<SplitSession, Long>)Collections.<SplitSession, Long>unmodifiableMap(times);
 	}
 	
 	private void writeObject(ObjectOutputStream out) throws IOException {
@@ -88,5 +106,16 @@ public class SplitEvent implements Serializable {
 	@Override
 	public int hashCode(){
 		return name.hashCode()+icon.hashCode()+times.hashCode()+positionId.hashCode();
+	}
+	
+	@Override
+	public String toString(){
+		String out =  name.get() + ":\n";
+		for(SplitSession ss:times.keySet()){
+			out+=ss+": " + times.get(ss) + "\n";
+		}
+		out+="\n";
+		out+=positionId.get()+"\n";
+		return out;
 	}
 }
