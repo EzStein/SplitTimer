@@ -24,22 +24,20 @@ public class OptionsController {
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
 	private SplitCollection splitCollection;
 	private Callback<SplitCollection, Void> callBackOnClose;
+	private Stage stage;
+	
 	public void initialize(){
 		System.out.println("OPTIONS INITIALIZED");
 	}
 	
-	/*public void initializeAsGUI(Stage stage, SplitCollection splitCollection){
+	public void initializeAsGUI(Stage stage, SplitCollection splitCollection){
 		initializeAsGUI(stage);
-		this.splitCollection=splitCollection;
-		splitEventTable.setItems(FXCollections.observableArrayList(splitCollection.getSplitEvents()));
-		splitEventTable.itemsProperty().bindBidirectional(other);
-	}*/
+		this.splitCollection.splitEventsProperty().addAll(splitCollection.splitEventsProperty().get());
+	}
 	
 	public void initializeAsGUI(Stage stage){
+		this.stage=stage;
 		splitCollection = new SplitCollection();
-		splitCollection.splitEventsProperty().addListener((a,oldValue,newValue)->{
-			System.out.println(newValue);
-		});
 		splitEventTable.setItems(splitCollection.splitEventsProperty());
 		
 		/*int i =0;
@@ -81,7 +79,6 @@ public class OptionsController {
 			public TableCell<SplitEvent, String> call(TableColumn<SplitEvent, String> column) {
 				return new EditableNameTableCell();
 			}
-			
 		});
 		
 		iconTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
@@ -110,16 +107,13 @@ public class OptionsController {
 	
 	public void close(){
 		if(callBackOnClose!=null){
-			
 			callBackOnClose.call(splitCollection);
 		}
 	}
 	
-	public void setOnClose(Callback callBack){
+	public void setOnClose(Callback<SplitCollection,Void> callBack){
 		callBackOnClose=callBack;
 	}
-	
-	
 	
 	@FXML
 	private void addEventButtonClick(ActionEvent ae){

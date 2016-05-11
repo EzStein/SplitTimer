@@ -1,12 +1,19 @@
 package xyz.ezstein.backend;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import xyz.ezstein.backend.app.Locator;
 
 /**
  * Holds a collection of SplitEvents which define the order of events for the split timer to work with.
@@ -21,8 +28,10 @@ public class SplitCollection implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	private Path savePath;
 	private transient SimpleListProperty<SplitEvent> splitEvents;
-	private final ArrayList<SplitSession> splitSessions;
+	private transient ObjectProperty<SplitSession> currentSessionProperty;
+	private final Set<SplitSession> splitSessions;
 	private final String name;
 	
 	/**
@@ -30,19 +39,43 @@ public class SplitCollection implements Serializable {
 	 * @param name
 	 * @param splitEvents
 	 */
-	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents){
+	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents,Path savePath){
+		this.savePath=savePath;
 		this.name=name;
 		this.splitEvents=new SimpleListProperty<SplitEvent>(FXCollections.observableList(splitEvents));
-		this.splitSessions=new ArrayList<SplitSession>();
+		this.splitSessions=new HashSet<SplitSession>();
+		currentSessionProperty = new SimpleObjectProperty<SplitSession>();
+		currentSessionProperty.addListener(new ChangeListener<SplitSession>(){
+
+			@Override
+			public void changed(ObservableValue<? extends SplitSession> observable, SplitSession oldValue,
+					SplitSession newValue) {
+				for(SplitEvent event:splitEvents){
+					event.currentTimeProperty().set(event.getTime(currentSessionProperty.get()));
+				}
+			}
+			
+		});
 	}
 	
 	/**
 	 * Constructs a SplitCollection with variable number of splitEvents
 	 * @param name
 	 * @param splitEvents
+	 * @throws IOException 
 	 */
-	public SplitCollection(String name, SplitEvent...splitEvents){
+	public SplitCollection(String name, SplitEvent...splitEvents) {
 		this(name, new ArrayList<SplitEvent>(Arrays.asList(splitEvents)));
+	}
+	
+	/**
+	 * Constructs a SplitCollection with variable number of splitEvents
+	 * @param name
+	 * @param splitEvents
+	 * @throws IOException 
+	 */
+	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents) {
+		this(name, splitEvents,Locator.locateFile("saved/collection-"+UUID.randomUUID()+".sc"));
 	}
 	
 	/**
@@ -59,6 +92,14 @@ public class SplitCollection implements Serializable {
 	public SplitCollection(String name){
 		this(name, new ArrayList<SplitEvent>());
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * Gets the total time for a given session.
@@ -102,11 +143,56 @@ public class SplitCollection implements Serializable {
 		return splitEvents;
 	}
 	
+	public ObjectProperty<SplitSession> currentSessionProperty(){
+		return currentSessionProperty;
+	}
+	
 	public String getName(){
 		return name;
 	}
 	
-	private ArrayList<SplitSession> getSplitSessions(){
+	
+	
+	
+	
+	public void newSession(String sessionName){
+		SplitSession session = new SplitSession(sessionName, (int)(Math.random()*1000));
+		splitSessions.add(session);
+		for(SplitEvent event:splitEvents){
+			event.putSession(session,0);
+		}
+		currentSessionProperty.set(session);
+	}
+	
+	public void changeSession(String sessionName){
+		
+	}
+	
+	public void updateSession(SplitSession session, int eventIndex, long time){
+		SplitEvent event = splitEvents.get(eventIndex);
+		event.putSession(session, time);
+		if(currentSessionProperty.get().equals(session)){
+			event.currentTimeProperty().set(time);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private Set<SplitSession> getSplitSessions(){
 		return splitSessions;
 	}
 	

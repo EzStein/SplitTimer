@@ -81,7 +81,7 @@
 					<Insets top="10" bottom="10" left="10" right="10"/>
 				</padding>
 				<Label fx:id="timeLabel" text="00:00:00"/>
-				<Button fx:id="startButton" onAction="#startButtonClick" text="Start"/>
+				<Button fx:id="startStopButton" onAction="#startStopButtonClick" text="Start"/>
 			</HBox>
 		</VBox>
 	</center>

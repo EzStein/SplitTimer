@@ -14,35 +14,41 @@ import javafx.beans.value.ObservableValue;
  * @version 1.0
  */
 public class SplitEvent implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private transient SimpleStringProperty name;
 	private transient SimpleStringProperty icon;
 	private transient SimpleIntegerProperty positionId;
 	private HashMap<SplitSession, Long> times;
+	private transient SimpleLongProperty currentTime;
 	
 	public SplitEvent(String name, String icon, int positionId){
 		this.name=new SimpleStringProperty(name);
 		this.icon=new SimpleStringProperty(icon);
 		this.positionId=new SimpleIntegerProperty(positionId);
 		times=new HashMap<SplitSession, Long>();
+		currentTime = new SimpleLongProperty();
 	}
 	
 	public SplitEvent(){
-		this("abc","123",0);
+		this("","",0);
 	}
 	
-	public void addSession(SplitSession splitSession, long time){
+	public void putSession(SplitSession splitSession, long time){
 		times.put(splitSession, time);
+		
 	}
 	
 	public SimpleStringProperty nameProperty(){
-		
 		return name;
 	}
 	public SimpleStringProperty iconProperty(){
 		return icon;
 	}
-	public SimpleLongProperty timeProperty(int i){
-		return new SimpleLongProperty(times.get(i));
+	public SimpleLongProperty currentTimeProperty(){
+		return currentTime;
 	}
 	
 	public long getBestTime(){
@@ -53,20 +59,16 @@ public class SplitEvent implements Serializable {
 		return time;
 	}
 	
-	public Collection<SplitSession> getSplitSessions(){
-		return Collections.unmodifiableCollection(times.keySet());
+	public long getTime(SplitSession ss){
+		return times.get(ss);
 	}
 	
 	public SimpleIntegerProperty positionIdProperty(){
 		return positionId;
 	}
 	
-	public long getTime(SplitSession ss){
-		return times.get(ss);
-	}
-	
-	public HashMap<SplitSession, Long> getTimes(){
-		return (HashMap<SplitSession, Long>)Collections.<SplitSession, Long>unmodifiableMap(times);
+	private HashMap<SplitSession, Long> getTimes(){
+		return times;
 	}
 	
 	private void writeObject(ObjectOutputStream out) throws IOException {
