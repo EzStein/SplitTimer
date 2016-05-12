@@ -20,26 +20,25 @@ public class SplitEvent implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private transient SimpleStringProperty name;
 	private transient SimpleStringProperty icon;
-	private transient SimpleIntegerProperty positionId;
-	private HashMap<SplitSession, Long> times;
-	private transient SimpleLongProperty currentTime;
+	private final TreeMap<SplitSession, Long> times;
+	private transient final SimpleLongProperty currentTime;
 	
-	public SplitEvent(String name, String icon, int positionId){
+	public SplitEvent(String name, String icon){
 		this.name=new SimpleStringProperty(name);
 		this.icon=new SimpleStringProperty(icon);
-		this.positionId=new SimpleIntegerProperty(positionId);
-		times=new HashMap<SplitSession, Long>();
+		times=new TreeMap<SplitSession, Long>();
 		currentTime = new SimpleLongProperty();
 	}
 	
 	public SplitEvent(){
-		this("","",0);
+		this("","");
 	}
 	
-	public void putSession(SplitSession splitSession, long time){
-		times.put(splitSession, time);
-		
+	public SplitEvent(String name){
+		this(name, "");
 	}
+	
+	
 	
 	public SimpleStringProperty nameProperty(){
 		return name;
@@ -50,6 +49,8 @@ public class SplitEvent implements Serializable {
 	public SimpleLongProperty currentTimeProperty(){
 		return currentTime;
 	}
+	
+	
 	
 	public long getBestTime(){
 		long time = Long.MAX_VALUE;
@@ -63,11 +64,14 @@ public class SplitEvent implements Serializable {
 		return times.get(ss);
 	}
 	
-	public SimpleIntegerProperty positionIdProperty(){
-		return positionId;
+	public void putSession(SplitSession splitSession, long time){
+		times.put(splitSession, time);
 	}
 	
-	private HashMap<SplitSession, Long> getTimes(){
+	
+	
+	
+	private TreeMap<SplitSession, Long> getTimes(){
 		return times;
 	}
 	
@@ -75,14 +79,12 @@ public class SplitEvent implements Serializable {
 		out.defaultWriteObject();
 		out.writeObject(name.get());
 		out.writeObject(icon.get());
-		out.writeInt(positionId.get());
 	}
 	
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
 		this.name = new SimpleStringProperty((String) in.readObject());
 		this.icon = new SimpleStringProperty((String) in.readObject());
-		this.positionId = new SimpleIntegerProperty(in.readInt());
 	}
 	
 	@Override
@@ -97,7 +99,6 @@ public class SplitEvent implements Serializable {
 			SplitEvent se = (SplitEvent) object;
 			if(se.nameProperty().equals(name) && 
 					se.iconProperty().equals(icon) &&
-					se.positionIdProperty().equals(positionId) &&
 					se.getTimes().equals(times)){
 				return true;
 			}
@@ -107,17 +108,15 @@ public class SplitEvent implements Serializable {
 	
 	@Override
 	public int hashCode(){
-		return name.hashCode()+icon.hashCode()+times.hashCode()+positionId.hashCode();
+		return name.hashCode()+icon.hashCode()+times.hashCode();
 	}
 	
 	@Override
 	public String toString(){
-		String out =  name.get() + ":\n";
+		String out =  name.get() + ":\t";
 		for(SplitSession ss:times.keySet()){
-			out+=ss+": " + times.get(ss) + "\n";
+			out+=ss+" (" + times.get(ss) + ")\t";
 		}
-		out+="\n";
-		out+=positionId.get()+"\n";
 		return out;
 	}
 }

@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import xyz.ezstein.backend.app.Locator;
 
 /**
@@ -30,31 +31,33 @@ public class SplitCollection implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Path savePath;
 	private transient SimpleListProperty<SplitEvent> splitEvents;
-	private transient ObjectProperty<SplitSession> currentSessionProperty;
-	private final Set<SplitSession> splitSessions;
+	private final HashMap<String, SplitSession> splitSessions;
 	private final String name;
 	
 	/**
 	 * Constructs a SplitCollection
 	 * @param name
 	 * @param splitEvents
+	 * @param savePath 
 	 */
 	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents,Path savePath){
 		this.savePath=savePath;
 		this.name=name;
 		this.splitEvents=new SimpleListProperty<SplitEvent>(FXCollections.observableList(splitEvents));
-		this.splitSessions=new HashSet<SplitSession>();
-		currentSessionProperty = new SimpleObjectProperty<SplitSession>();
-		currentSessionProperty.addListener(new ChangeListener<SplitSession>(){
-
+		this.splitSessions=new HashMap<String,SplitSession>();
+		this.splitEvents.addListener(new ListChangeListener<SplitEvent>(){
 			@Override
-			public void changed(ObservableValue<? extends SplitSession> observable, SplitSession oldValue,
-					SplitSession newValue) {
-				for(SplitEvent event:splitEvents){
-					event.currentTimeProperty().set(event.getTime(currentSessionProperty.get()));
+			public void onChanged(ListChangeListener.Change<? extends SplitEvent> c) {
+				while(c.next()){
+					if(c.wasAdded()){
+						for(SplitEvent se: c.getAddedSubList()){
+							for(SplitSession ss: splitSessions.values()){
+								se.putSession(ss, -1);
+							}
+						}
+					}
 				}
 			}
-			
 		});
 	}
 	
@@ -62,7 +65,6 @@ public class SplitCollection implements Serializable {
 	 * Constructs a SplitCollection with variable number of splitEvents
 	 * @param name
 	 * @param splitEvents
-	 * @throws IOException 
 	 */
 	public SplitCollection(String name, SplitEvent...splitEvents) {
 		this(name, new ArrayList<SplitEvent>(Arrays.asList(splitEvents)));
@@ -75,7 +77,7 @@ public class SplitCollection implements Serializable {
 	 * @throws IOException 
 	 */
 	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents) {
-		this(name, splitEvents,Locator.locateFile("saved/collection-"+UUID.randomUUID()+".sc"));
+		this(name, splitEvents,Paths.get(System.getProperty("user.home")+"/tmp.sr"));
 	}
 	
 	/**
@@ -91,6 +93,10 @@ public class SplitCollection implements Serializable {
 	 */
 	public SplitCollection(String name){
 		this(name, new ArrayList<SplitEvent>());
+	}
+	
+	public Path getSavePath(){
+		return savePath;
 	}
 	
 	
@@ -120,7 +126,7 @@ public class SplitCollection implements Serializable {
 	 */
 	public long getBestSessionTime(){
 		long time = Long.MAX_VALUE;
-		for(SplitSession ss:splitSessions){
+		for(SplitSession ss:splitSessions.values()){
 			time = Math.min(time, getSessionTime(ss));
 		}
 		return time;
@@ -138,13 +144,8 @@ public class SplitCollection implements Serializable {
 		return time;
 	}
 	
-	
 	public SimpleListProperty<SplitEvent> splitEventsProperty(){
 		return splitEvents;
-	}
-	
-	public ObjectProperty<SplitSession> currentSessionProperty(){
-		return currentSessionProperty;
 	}
 	
 	public String getName(){
@@ -153,46 +154,62 @@ public class SplitCollection implements Serializable {
 	
 	
 	
-	
-	
+	/**
+	 * Constructs a new SplitSession and adds it to all events. It then changes the current session.
+	 * @param sessionName
+	 */
 	public void newSession(String sessionName){
-		SplitSession session = new SplitSession(sessionName, (int)(Math.random()*1000));
-		splitSessions.add(session);
+		SplitSession session = new SplitSession(sessionName);
+		splitSessions.put(sessionName,session);
 		for(SplitEvent event:splitEvents){
-			event.putSession(session,0);
+			event.putSession(session,-1);
 		}
-		currentSessionProperty.set(session);
 	}
 	
-	public void changeSession(String sessionName){
+	public void changeDisplayedTime(int eventIndex, long time){
+		SplitEvent event = splitEvents.get(eventIndex);
+		event.currentTimeProperty().set(time);
+	}
+	
+	public void updateSession(String sessionName, int eventIndex, long time){
+		SplitEvent event = splitEvents.get(eventIndex);
+		SplitSession session = splitSessions.get(sessionName);
+		event.putSession(session, time);
+	}
+	
+	public void newEvent(String eventName){
+		SplitEvent event = new SplitEvent(eventName);
+		splitEvents.add(event);
 		
 	}
 	
-	public void updateSession(SplitSession session, int eventIndex, long time){
-		SplitEvent event = splitEvents.get(eventIndex);
-		event.putSession(session, time);
-		if(currentSessionProperty.get().equals(session)){
-			event.currentTimeProperty().set(time);
-		}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@Override
+	public String toString(){
+		String out = name+":\n";
+		//for(SplitEvent se: splitEvents){
+		//	out+="\t"+se+"\n";
+		//}
+		out+=splitEvents.stream().reduce("", (s, se)->{
+			return s + se.toString() + "\n";
+		}, (s1,s2)->{
+			return s1+s2;
+		});
+		return out;
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	private Set<SplitSession> getSplitSessions(){
+	private Map<String,SplitSession> getSplitSessions(){
 		return splitSessions;
 	}
 	

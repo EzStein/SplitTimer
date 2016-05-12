@@ -30,22 +30,14 @@ public class OptionsController {
 		System.out.println("OPTIONS INITIALIZED");
 	}
 	
-	public void initializeAsGUI(Stage stage, SplitCollection splitCollection){
-		initializeAsGUI(stage);
-		this.splitCollection.splitEventsProperty().addAll(splitCollection.splitEventsProperty().get());
+	public void initializeAsGUI(Stage stage){
+		initializeAsGUI(stage, new SplitCollection());
 	}
 	
-	public void initializeAsGUI(Stage stage){
+	public void initializeAsGUI(Stage stage,SplitCollection splitCollection){
 		this.stage=stage;
-		splitCollection = new SplitCollection();
+		this.splitCollection = splitCollection;
 		splitEventTable.setItems(splitCollection.splitEventsProperty());
-		
-		/*int i =0;
-		for(SplitEvent event: splitEventTable.getItems()){
-			event.positionIdProperty().set(i);
-			collection.getSplitEvents().add(event);
-			i++;
-		}*/
 		stage.setOnCloseRequest(we->{
 			we.consume();
 			
@@ -102,7 +94,6 @@ public class OptionsController {
 			}
 			
 		});
-		
 	}
 	
 	public void close(){
@@ -125,23 +116,4 @@ public class OptionsController {
 		splitEventTable.getItems().remove(splitEventTable.getSelectionModel().getSelectedItem());
 	}
 	
-	@FXML
-	private void saveButtonClick(ActionEvent ae){
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Save...");
-		File file = null;
-		if((file = fileChooser.showSaveDialog(null))==null){
-			return;
-		}
-		
-		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
-			out.writeObject(splitCollection);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 }

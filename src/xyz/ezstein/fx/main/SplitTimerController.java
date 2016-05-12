@@ -1,25 +1,23 @@
 package xyz.ezstein.fx.main;
 
 import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 import java.util.concurrent.*;
 
 import de.codecentric.centerdevice.*;
 import xyz.ezstein.backend.app.*;
-import xyz.ezstein.fx.options.EditableIconTableCell;
-import xyz.ezstein.fx.options.OptionsController;
+import xyz.ezstein.fx.options.*;
 import xyz.ezstein.backend.*;
 import javafx.application.*;
 import javafx.beans.property.*;
 import javafx.beans.value.*;
-import javafx.collections.FXCollections;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.*;
-import javafx.scene.control.cell.*;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.*;
 import javafx.stage.*;
 import javafx.util.*;
 
@@ -31,6 +29,7 @@ public class SplitTimerController {
 	private ObjectProperty<SplitCollection> splitCollectionProperty;
 	private boolean timing;
 	private int eventIndex;
+	private String currentSession;
 	@FXML private Label timeLabel;
 	@FXML private MenuBar mainMenuBar;
 	@FXML private Menu applicationMenu;
@@ -49,6 +48,7 @@ public class SplitTimerController {
 	}
 	
 	public void initializeAsGUI(Stage stage, Scene scene){
+		this.currentSession="";
 		this.eventIndex=0;
 		this.timing=false;
 		this.stage=stage;
@@ -133,6 +133,7 @@ public class SplitTimerController {
 		scene.setOnKeyReleased((ke)->{
 			if(ke.getCode().equals(KeyCode.SPACE)){
 				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
+					
 					eventIndex++;
 				} else {
 					new Thread(()->{
@@ -180,7 +181,6 @@ public class SplitTimerController {
 				lock.notifyAll();
 			}
 			System.out.println("ABC");
-			
 		}
 		
 		public void join(){
@@ -201,17 +201,23 @@ public class SplitTimerController {
 		public void stop(){
 			close=true;
 		}
+		
+		public boolean isTerminated(){
+			return terminated;
+		}
 	}
 	
 	public void updateUITime(long elapsedTime){
 		Platform.runLater(()->{
-			long hours = TimeUnit.NANOSECONDS.toHours(elapsedTime);
-			long minutes = TimeUnit.NANOSECONDS.toMinutes(elapsedTime)-TimeUnit.HOURS.toMinutes(TimeUnit.NANOSECONDS.toHours(elapsedTime));
-			long seconds = TimeUnit.NANOSECONDS.toSeconds(elapsedTime)-TimeUnit.MINUTES.toSeconds(TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
-			long milliseconds = TimeUnit.NANOSECONDS.toMillis(elapsedTime)-TimeUnit.SECONDS.toMillis(TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
-			String timeText = hours+":"+minutes+":"+seconds+":"+milliseconds;
-			timeLabel.setText(timeText);
-			splitCollectionProperty.get().updateSession(splitCollectionProperty.get().currentSessionProperty().get(), eventIndex, elapsedTime);
+			if(!updater.isTerminated()){
+				long hours = TimeUnit.NANOSECONDS.toHours(elapsedTime);
+				long minutes = TimeUnit.NANOSECONDS.toMinutes(elapsedTime)-TimeUnit.HOURS.toMinutes(TimeUnit.NANOSECONDS.toHours(elapsedTime));
+				long seconds = TimeUnit.NANOSECONDS.toSeconds(elapsedTime)-TimeUnit.MINUTES.toSeconds(TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
+				long milliseconds = TimeUnit.NANOSECONDS.toMillis(elapsedTime)-TimeUnit.SECONDS.toMillis(TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
+				String timeText = hours+":"+minutes+":"+seconds+":"+milliseconds;
+				timeLabel.setText(timeText);
+				splitCollectionProperty.get().changeDisplayedTime(eventIndex, elapsedTime);
+			}
 		});
 	}
 	
@@ -240,7 +246,8 @@ public class SplitTimerController {
 	private void startStopButtonClick(ActionEvent ae){
 		if(startStopButton.getText().equals("Start")){
 			eventIndex=0;
-			splitCollectionProperty.get().newSession("NEW");
+			currentSession = "TMP_NAME" + UUID.randomUUID();
+			splitCollectionProperty.get().newSession(currentSession);
 			updater = new Updater();
 			new Thread(updater).start();
 			startStopButton.setText("Stop");;
@@ -250,7 +257,6 @@ public class SplitTimerController {
 		} else {
 			System.err.println("ERROR");
 		}
-		
 	}
 	
 	@FXML
@@ -293,13 +299,62 @@ public class SplitTimerController {
 	}
 	
 	@FXML
-	private void saveMenuItemClick(ActionEvent ae){
+	private void editMenuItemClick(ActionEvent ae){
+		Parent root = null;
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
 		
+		try {
+			root = loader.load();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(1);
+		}
+		
+		Stage stage = new Stage();
+		OptionsController oc = ((OptionsController) loader.getController());
+		oc.initializeAsGUI(stage,splitCollectionProperty.get());
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
+	
+	@FXML
+	private void saveMenuItemClick(ActionEvent ae){
+		SplitCollection collection = splitCollectionProperty.get();
+		if(collection.getSavePath()==null){
+			saveAsMenuItemClick(ae);
+		} else {
+			try(ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(collection.getSavePath()))) {
+				out.writeObject(collection);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@FXML
 	private void saveAsMenuItemClick(ActionEvent ae){
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Save...");
+		File file = null;
+		if((file = fileChooser.showSaveDialog(null))==null){
+			return;
+		}
 		
+		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
+			out.writeObject(splitCollectionProperty.get());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@FXML

@@ -45,6 +45,7 @@
 				<items>
 					<MenuItem text="New..." onAction="#newMenuItemClick"/>
 					<MenuItem text="Open..." onAction="#openMenuItemClick"/>
+					<MenuItem text="Edit..." onAction="#editMenuItemClick"/>
 					<MenuItem text="Save" onAction="#saveMenuItemClick"/>
 					<MenuItem text="Save As..." onAction="#saveAsMenuItemClick"/>
 				</items>
