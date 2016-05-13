@@ -5,8 +5,11 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import com.sun.javafx.scene.control.skin.TableHeaderRow;
+
 import de.codecentric.centerdevice.*;
 import xyz.ezstein.backend.app.*;
+import xyz.ezstein.backend.util.*;
 import xyz.ezstein.fx.options.*;
 import xyz.ezstein.backend.*;
 import javafx.application.*;
@@ -24,10 +27,8 @@ import javafx.util.*;
 public class SplitTimerController {
 	
 	private Stage stage;
-	private Scene scene;
 	private Updater updater;
 	private ObjectProperty<SplitCollection> splitCollectionProperty;
-	private boolean timing;
 	private int eventIndex;
 	private String currentSession;
 	@FXML private Label timeLabel;
@@ -50,13 +51,12 @@ public class SplitTimerController {
 	public void initializeAsGUI(Stage stage, Scene scene){
 		this.currentSession="";
 		this.eventIndex=0;
-		this.timing=false;
 		this.stage=stage;
-		this.scene=scene;
 		stage.setOnCloseRequest(e->{
 			e.consume();
 			close(e);
 		});
+		startStopButton.setDisable(true);
 		if(Locator.isMac())
 		{
 			mainMenuBar.getMenus().remove(applicationMenu);
@@ -126,23 +126,48 @@ public class SplitTimerController {
 			public void changed(ObservableValue<? extends SplitCollection> observable, SplitCollection oldValue,
 					SplitCollection newValue) {
 				splitEventTable.setItems(splitCollectionProperty.get().splitEventsProperty());
+				if(splitCollectionProperty.get().splitEventsProperty().size()<=0){
+					startStopButton.setDisable(true);
+				} else {
+					startStopButton.setDisable(false);
+				}
 			} 
 		});
 		splitCollectionProperty.set(new SplitCollection());
 		
 		scene.setOnKeyReleased((ke)->{
-			if(ke.getCode().equals(KeyCode.SPACE)){
+			if(ke.getCode().equals(KeyCode.SPACE) && updater!=null && !updater.isTerminated()){
+				splitCollectionProperty.get().updateSession(currentSession, eventIndex, updater.getTime());
 				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
-					
 					eventIndex++;
 				} else {
 					new Thread(()->{
 						updater.stop();
 						updater.join();
 						eventIndex=0;
+						Platform.runLater(()->{
+							startStopButton.setText("Start");
+							startStopButton.setDisable(false);
+						});
+						
 					}).start();
 				}
 			}
+		});
+		
+		splitEventTable.widthProperty().addListener(new ChangeListener<Number>()
+		{
+		    @Override
+		    public void changed(ObservableValue<? extends Number> source, Number oldWidth, Number newWidth)
+		    {
+		        TableHeaderRow header = (TableHeaderRow) splitEventTable.lookup("TableHeaderRow");
+		        header.reorderingProperty().addListener(new ChangeListener<Boolean>() {
+		            @Override
+		            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+		                header.setReordering(false);
+		            }
+		        });
+		    }
 		});
 
 	}
@@ -183,6 +208,11 @@ public class SplitTimerController {
 			System.out.println("ABC");
 		}
 		
+		public long getTime(){
+			long elapsed = currentTime-startTime;
+			return elapsed;
+		}
+		
 		public void join(){
 			synchronized(lock){
 				while(!terminated){
@@ -210,12 +240,7 @@ public class SplitTimerController {
 	public void updateUITime(long elapsedTime){
 		Platform.runLater(()->{
 			if(!updater.isTerminated()){
-				long hours = TimeUnit.NANOSECONDS.toHours(elapsedTime);
-				long minutes = TimeUnit.NANOSECONDS.toMinutes(elapsedTime)-TimeUnit.HOURS.toMinutes(TimeUnit.NANOSECONDS.toHours(elapsedTime));
-				long seconds = TimeUnit.NANOSECONDS.toSeconds(elapsedTime)-TimeUnit.MINUTES.toSeconds(TimeUnit.NANOSECONDS.toMinutes(elapsedTime));
-				long milliseconds = TimeUnit.NANOSECONDS.toMillis(elapsedTime)-TimeUnit.SECONDS.toMillis(TimeUnit.NANOSECONDS.toSeconds(elapsedTime));
-				String timeText = hours+":"+minutes+":"+seconds+":"+milliseconds;
-				timeLabel.setText(timeText);
+				timeLabel.setText(Util.nanosToReadable(elapsedTime));
 				splitCollectionProperty.get().changeDisplayedTime(eventIndex, elapsedTime);
 			}
 		});
@@ -244,19 +269,16 @@ public class SplitTimerController {
 	
 	@FXML
 	private void startStopButtonClick(ActionEvent ae){
-		if(startStopButton.getText().equals("Start")){
-			eventIndex=0;
-			currentSession = "TMP_NAME" + UUID.randomUUID();
-			splitCollectionProperty.get().newSession(currentSession);
-			updater = new Updater();
-			new Thread(updater).start();
-			startStopButton.setText("Stop");;
-		} else if(startStopButton.getText().equals("Stop")){
-			startStopButton.setText("Start");
-			updater.stop();
-		} else {
-			System.err.println("ERROR");
+		for(int i=0; i<splitCollectionProperty.get().splitEventsProperty().size();i++){
+			splitCollectionProperty.get().changeDisplayedTime(i, 0);
 		}
+		eventIndex=0;
+		currentSession = "TMP_NAME" + UUID.randomUUID();
+		splitCollectionProperty.get().newSession(currentSession);
+		updater = new Updater();
+		new Thread(updater).start();
+		startStopButton.setText("Stop");
+		startStopButton.setDisable(true);
 	}
 	
 	@FXML
@@ -273,6 +295,8 @@ public class SplitTimerController {
 		}
 		
 		Stage stage = new Stage();
+		stage.initOwner(this.stage);
+		stage.initModality(Modality.WINDOW_MODAL);
 		OptionsController oc = ((OptionsController) loader.getController());
 		oc.initializeAsGUI(stage);
 		oc.setOnClose((splitCollection)->{
@@ -288,7 +312,7 @@ public class SplitTimerController {
 	private void openMenuItemClick(ActionEvent ae){
 		FileChooser fc = new FileChooser();
 		File file = null;
-		if((file = fc.showOpenDialog(null))==null){
+		if((file = fc.showOpenDialog(stage))==null){
 			return;
 		}
 		try {
@@ -312,6 +336,8 @@ public class SplitTimerController {
 		}
 		
 		Stage stage = new Stage();
+		stage.initOwner(this.stage);
+		stage.initModality(Modality.WINDOW_MODAL);
 		OptionsController oc = ((OptionsController) loader.getController());
 		oc.initializeAsGUI(stage,splitCollectionProperty.get());
 		Scene scene = new Scene(root);
@@ -342,7 +368,7 @@ public class SplitTimerController {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Save...");
 		File file = null;
-		if((file = fileChooser.showSaveDialog(null))==null){
+		if((file = fileChooser.showSaveDialog(stage))==null){
 			return;
 		}
 		

@@ -99,6 +99,10 @@ public class SplitCollection implements Serializable {
 		return savePath;
 	}
 	
+	public Set<SplitSession> getUnmodifiableSplitSessions(){
+		return Collections.unmodifiableSortedSet(new TreeSet<SplitSession>(splitSessions.values()));
+	}
+	
 	
 	
 	

@@ -36,10 +36,10 @@
 			
 			<TableView fx:id="splitEventTable">
 				<columns>
-					<TableColumn fx:id="nameTableColumn" text="Name"/>
-					<TableColumn fx:id="timeTableColumn" text="Time"/>
-					<TableColumn fx:id="iconTableColumn" text="Icon"/>
-					<TableColumn fx:id="splitTimeTableColumn" text="Split Time"/>
+					<TableColumn fx:id="nameTableColumn" text="Name" sortable="false"/>
+					<TableColumn fx:id="timeTableColumn" text="Time" sortable="false"/>
+					<TableColumn fx:id="iconTableColumn" text="Icon" sortable="false"/>
+					<TableColumn fx:id="splitTimeTableColumn" text="Split Time" sortable="false"/>
 				</columns>
 			</TableView>
 			<HBox spacing="10">
