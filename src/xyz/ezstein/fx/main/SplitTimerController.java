@@ -3,9 +3,8 @@ package xyz.ezstein.fx.main;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;
 
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
+import com.sun.javafx.scene.control.skin.*;
 
 import de.codecentric.centerdevice.*;
 import xyz.ezstein.backend.app.*;
@@ -23,6 +22,7 @@ import javafx.scene.control.TableColumn.*;
 import javafx.scene.input.*;
 import javafx.stage.*;
 import javafx.util.*;
+import xyz.ezstein.fx.cells.*;
 
 public class SplitTimerController {
 	
@@ -254,6 +254,7 @@ public class SplitTimerController {
 		System.out.println("CLOSING");
 		stage.close();
 	}
+	
 	
 	public void open(File file) throws FileNotFoundException{
 		try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))){

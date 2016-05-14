@@ -14,6 +14,7 @@ import javafx.stage.*;
 import javafx.util.*;
 import xyz.ezstein.backend.*;
 import xyz.ezstein.backend.util.*;
+import xyz.ezstein.fx.cells.*;
 
 public class OptionsController {
 	
@@ -95,9 +96,12 @@ public class OptionsController {
 		});
 		
 		for(SplitSession session : splitCollection.getUnmodifiableSplitSessions()){
-			TableColumn<SplitEvent, String> column = new TableColumn<SplitEvent, String>(session.getDate().atZone(ZoneId.systemDefault()).toString());
+			TableColumn<SplitEvent, Number> column = new TableColumn<SplitEvent, Number>(session.getDate().atZone(ZoneId.systemDefault()).toString());
 			column.setCellValueFactory((dataFeatures)->{
-				return new SimpleStringProperty(Util.nanosToReadable(dataFeatures.getValue().getTime(session)));
+				return new SimpleLongProperty(dataFeatures.getValue().getTime(session));
+			});
+			column.setCellFactory((col)->{
+				return new TimeTableCell();
 			});
 			splitEventTable.getColumns().add(column);
 		}

@@ -1,4 +1,4 @@
-package xyz.ezstein.fx.options;
+package xyz.ezstein.fx.cells;
 
 import javafx.beans.property.*;
 import javafx.beans.value.*;

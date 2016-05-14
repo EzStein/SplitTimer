@@ -1,4 +1,4 @@
-package xyz.ezstein.fx.main;
+package xyz.ezstein.fx.cells;
 
 import java.io.File;
 import java.io.FileInputStream;
