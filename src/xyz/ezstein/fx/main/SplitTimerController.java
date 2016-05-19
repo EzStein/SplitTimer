@@ -75,9 +75,18 @@ public class SplitTimerController {
 			@Override
 			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
 				// TODO Auto-generated method stub
-				return new SimpleLongProperty(0);
+				return splitEvent.getValue().currentSplitTimeProperty();
 			}
 		});
+		
+		splitTimeTableColumn.setCellFactory(new Callback<TableColumn<SplitEvent, Number>, TableCell<SplitEvent, Number>>(){
+			@Override
+			public TableCell<SplitEvent, Number> call(TableColumn<SplitEvent, Number> param) {
+				return new TimeTableCell();
+			}
+		});
+		
+		
 		nameTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
 			@Override
 			public ObservableValue<String> call(CellDataFeatures<SplitEvent, String> splitEvent) {
@@ -137,7 +146,8 @@ public class SplitTimerController {
 		
 		scene.setOnKeyReleased((ke)->{
 			if(ke.getCode().equals(KeyCode.SPACE) && updater!=null && !updater.isTerminated()){
-				splitCollectionProperty.get().updateSession(currentSession, eventIndex, updater.getTime());
+				splitCollectionProperty.get().updateSession(currentSession, eventIndex, updater.getTime()-splitCollectionProperty.get().getSumOfTimeUntilEvent(eventIndex-1, currentSession));
+				
 				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
 					eventIndex++;
 				} else {
@@ -242,6 +252,7 @@ public class SplitTimerController {
 			if(!updater.isTerminated()){
 				timeLabel.setText(Util.nanosToReadable(elapsedTime));
 				splitCollectionProperty.get().changeDisplayedTime(eventIndex, elapsedTime);
+				splitCollectionProperty.get().changeDisplayedSplitTime(eventIndex, elapsedTime);
 			}
 		});
 	}
@@ -256,7 +267,7 @@ public class SplitTimerController {
 	}
 	
 	
-	public void open(File file) throws FileNotFoundException{
+	public void open(File file) {
 		try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))){
 			splitCollectionProperty.set((SplitCollection)in.readObject());
 		} catch (FileNotFoundException e) {
@@ -266,6 +277,7 @@ public class SplitTimerController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println(splitCollectionProperty.get());
 	}
 	
 	@FXML
@@ -310,17 +322,14 @@ public class SplitTimerController {
 	}
 	
 	@FXML
-	private void openMenuItemClick(ActionEvent ae){
+	private void openMenuItemClick(ActionEvent ae) {
 		FileChooser fc = new FileChooser();
+		fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Split Collection (*.spc)","*.spc"));
 		File file = null;
 		if((file = fc.showOpenDialog(stage))==null){
 			return;
 		}
-		try {
-			open(file);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		open(file);
 	}
 	
 	@FXML
@@ -361,6 +370,10 @@ public class SplitTimerController {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			Alert alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setContentText("Saved!");
+			alert.setTitle("Saving...");
+			alert.show();
 		}
 	}
 	
@@ -372,8 +385,13 @@ public class SplitTimerController {
 		if((file = fileChooser.showSaveDialog(stage))==null){
 			return;
 		}
+		String filePath = file.getAbsolutePath();
+		if(!filePath.endsWith(".spc")){
+			filePath+=".spc";
+		}
+		splitCollectionProperty.get().setSavePath(Paths.get(filePath));
 		
-		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
+		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filePath))) {
 			out.writeObject(splitCollectionProperty.get());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -382,6 +400,10 @@ public class SplitTimerController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		alert.setContentText("Saved!");
+		alert.setTitle("Saving...");
+		alert.show();
 	}
 	
 	@FXML

@@ -21,7 +21,9 @@ public class SplitTimerGUILauncher extends Application {
 	 * This main method launches a javafx application GUI.
 	 * @param args	unused
 	 */
-	public static void main(String[] args){
+	public static void main(String[] args) {
+		System.setProperty("Dglass.win.minHiDPI","2");
+		System.setProperty("Dsun.java2d.dpiaware", "false");
 		launch(args);
 	}
 
@@ -44,7 +46,6 @@ public class SplitTimerGUILauncher extends Application {
 		
 		SplitTimerController controller = loader.getController();
 		controller.initializeAsGUI(stage,scene);
-		
 		stage.show();
 		
 	}

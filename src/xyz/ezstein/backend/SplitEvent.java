@@ -21,13 +21,15 @@ public class SplitEvent implements Serializable {
 	private transient SimpleStringProperty name;
 	private transient SimpleStringProperty icon;
 	private final TreeMap<SplitSession, Long> times;
-	private transient final SimpleLongProperty currentTime;
+	private transient SimpleLongProperty currentTimeProperty;
+	private transient SimpleLongProperty currentSplitTimeProperty;
 	
 	public SplitEvent(String name, String icon){
 		this.name=new SimpleStringProperty(name);
 		this.icon=new SimpleStringProperty(icon);
 		times=new TreeMap<SplitSession, Long>();
-		currentTime = new SimpleLongProperty();
+		currentTimeProperty = new SimpleLongProperty(0);
+		currentSplitTimeProperty = new SimpleLongProperty(0);
 	}
 	
 	public SplitEvent(){
@@ -47,10 +49,11 @@ public class SplitEvent implements Serializable {
 		return icon;
 	}
 	public SimpleLongProperty currentTimeProperty(){
-		return currentTime;
+		return currentTimeProperty;
 	}
-	
-	
+	public SimpleLongProperty currentSplitTimeProperty(){
+		return currentSplitTimeProperty;
+	}
 	
 	public long getBestTime(){
 		long time = Long.MAX_VALUE;
@@ -85,6 +88,7 @@ public class SplitEvent implements Serializable {
 		in.defaultReadObject();
 		this.name = new SimpleStringProperty((String) in.readObject());
 		this.icon = new SimpleStringProperty((String) in.readObject());
+		this.currentTimeProperty = new SimpleLongProperty(0);
 	}
 	
 	@Override

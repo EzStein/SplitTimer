@@ -1,20 +1,12 @@
 package xyz.ezstein.backend;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import xyz.ezstein.backend.app.Locator;
+import javafx.beans.property.*;
+import javafx.collections.*;
+import xyz.ezstein.backend.util.Util;
 
 /**
  * Holds a collection of SplitEvents which define the order of events for the split timer to work with.
@@ -29,7 +21,7 @@ public class SplitCollection implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Path savePath;
+	private transient Path savePath;
 	private transient SimpleListProperty<SplitEvent> splitEvents;
 	private final HashMap<String, SplitSession> splitSessions;
 	private final String name;
@@ -45,7 +37,7 @@ public class SplitCollection implements Serializable {
 		this.name=name;
 		this.splitEvents=new SimpleListProperty<SplitEvent>(FXCollections.observableList(splitEvents));
 		this.splitSessions=new HashMap<String,SplitSession>();
-		this.splitEvents.addListener(new ListChangeListener<SplitEvent>(){
+		/*this.splitEvents.addListener(new ListChangeListener<SplitEvent>(){
 			@Override
 			public void onChanged(ListChangeListener.Change<? extends SplitEvent> c) {
 				while(c.next()){
@@ -58,7 +50,7 @@ public class SplitCollection implements Serializable {
 					}
 				}
 			}
-		});
+		});*/
 	}
 	
 	/**
@@ -74,10 +66,9 @@ public class SplitCollection implements Serializable {
 	 * Constructs a SplitCollection with variable number of splitEvents
 	 * @param name
 	 * @param splitEvents
-	 * @throws IOException 
 	 */
 	public SplitCollection(String name, ArrayList<SplitEvent> splitEvents) {
-		this(name, splitEvents,Paths.get(System.getProperty("user.home")+"/tmp.sr"));
+		this(name, splitEvents,null);
 	}
 	
 	/**
@@ -95,10 +86,28 @@ public class SplitCollection implements Serializable {
 		this(name, new ArrayList<SplitEvent>());
 	}
 	
+	
+	
+	/**
+	 * Returns the save path of this splitCollection
+	 * @return the save path of this splitCollection
+	 */
 	public Path getSavePath(){
 		return savePath;
 	}
 	
+	/**
+	 * Sets the save path
+	 * @param path
+	 */
+	public void setSavePath(Path path){
+		savePath=path;
+	}
+	
+	/**
+	 * Returns a read only sorted set of splitSessions
+	 * @return a read only sorted set of splitSessions
+	 */
 	public Set<SplitSession> getUnmodifiableSplitSessions(){
 		return Collections.unmodifiableSortedSet(new TreeSet<SplitSession>(splitSessions.values()));
 	}
@@ -136,6 +145,19 @@ public class SplitCollection implements Serializable {
 		return time;
 	}
 	
+	/*
+	 * FIX THIS METHOD!!!!!!!!!!!!!!!
+	 */
+	private SplitSession getBestSession(){
+		SplitSession session=new ArrayList<SplitSession>(splitSessions.values()).get(0);
+		for(SplitSession ss:splitSessions.values()){
+			if(getSessionTime(ss)<getSessionTime(session)){
+				session = ss;
+			}
+		}
+		return session;
+	}
+	
 	/**
 	 * Returns the sum of best event times.
 	 * @return the sum of best event times.
@@ -148,10 +170,18 @@ public class SplitCollection implements Serializable {
 		return time;
 	}
 	
+	/**
+	 * Returns a list of splitEvents as an observable value. Consider attempting to make this unmodifiable.
+	 * @return a list of splitEvents.
+	 */
 	public SimpleListProperty<SplitEvent> splitEventsProperty(){
 		return splitEvents;
 	}
 	
+	/**
+	 * Returns the name
+	 * @return the name
+	 */
 	public String getName(){
 		return name;
 	}
@@ -159,31 +189,67 @@ public class SplitCollection implements Serializable {
 	
 	
 	/**
-	 * Constructs a new SplitSession and adds it to all events. It then changes the current session.
+	 * Constructs a new SplitSession and adds it to all events.
 	 * @param sessionName
 	 */
 	public void newSession(String sessionName){
 		SplitSession session = new SplitSession(sessionName);
 		splitSessions.put(sessionName,session);
 		for(SplitEvent event:splitEvents){
-			event.putSession(session,-1);
+			event.putSession(session,Long.MAX_VALUE);
 		}
 	}
 	
+	/**
+	 * Changes the time displayed by a given splitEvent
+	 * @param eventIndex
+	 * @param time
+	 */
 	public void changeDisplayedTime(int eventIndex, long time){
 		SplitEvent event = splitEvents.get(eventIndex);
 		event.currentTimeProperty().set(time);
 	}
 	
+	public void changeDisplayedSplitTime(int eventIndex, long time){
+		long bestTime = getSumOfTimeUntilEvent(eventIndex, getBestSession());
+		System.out.println(eventIndex+ " " + Util.nanosToReadable( bestTime));
+		splitEvents.get(eventIndex).currentSplitTimeProperty().set(time-bestTime);
+	}
+	
+	private long getSumOfTimeUntilEvent(int eventIndex, SplitSession ss){
+		long time=0;
+		for(int i =0; i<=eventIndex; i++){
+			time+=splitEvents.get(i).getTime(ss);
+		}
+		return time;
+	}
+	
+	public long getSumOfTimeUntilEvent(int eventIndex, String splitSession){
+		return getSumOfTimeUntilEvent(eventIndex, splitSessions.get(splitSession));
+	}
+	
+	/**
+	 * Writes an update to a given splitEvent and splitSession pair.
+	 * @param sessionName
+	 * @param eventIndex
+	 * @param time
+	 */
 	public void updateSession(String sessionName, int eventIndex, long time){
 		SplitEvent event = splitEvents.get(eventIndex);
 		SplitSession session = splitSessions.get(sessionName);
 		event.putSession(session, time);
 	}
 	
+	/**
+	 * Creates a new event ensuring that all of the splitSessions currently in use are added to it.
+	 * @param eventName
+	 */
 	public void newEvent(String eventName){
 		SplitEvent event = new SplitEvent(eventName);
 		splitEvents.add(event);
+		for(SplitSession ss: splitSessions.values()){
+			event.putSession(ss, -1);
+		}
 		
 	}
 	
@@ -244,10 +310,13 @@ public class SplitCollection implements Serializable {
 	private void writeObject(ObjectOutputStream out) throws IOException {
 		out.defaultWriteObject();
 		out.writeObject(new ArrayList<SplitEvent>(splitEvents));
+		out.writeObject(savePath.toString());
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
-		this.splitEvents = new SimpleListProperty(FXCollections.observableList((ArrayList<SplitEvent>)in.readObject()));
+		this.splitEvents = new SimpleListProperty<SplitEvent>(FXCollections.observableList((ArrayList<SplitEvent>)in.readObject()));
+		this.savePath = Paths.get((String)in.readObject());
 	}
 }

@@ -134,7 +134,8 @@ public class OptionsController {
 	
 	@FXML
 	private void addEventButtonClick(ActionEvent ae){
-		splitEventTable.getItems().add(new SplitEvent());
+		//splitEventTable.getItems().add(new SplitEvent());
+		splitCollection.newEvent("");
 	}
 	
 	@FXML

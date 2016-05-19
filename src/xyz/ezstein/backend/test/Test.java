@@ -1,12 +1,14 @@
 package xyz.ezstein.backend.test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Test {
 	public static void main(String[] args){
-		int[] array = new int[]{10,9,8,3,4,3,7,6,5,4,3,2,1,4};
+		/*int[] array = new int[]{10,9,8,3,4,3,7,6,5,4,3,2,1,4};
 		Planet[] planets = new Planet[]{Planet.C,Planet.B,Planet.A,Planet.D,Planet.E,Planet.F};
 		planets=mergeSort(planets);
 		System.out.print("[");
@@ -16,7 +18,9 @@ public class Test {
 				System.out.print(", ");
 			}
 		}
-		System.out.println("]");
+		System.out.println("]");*/
+		Path path = Paths.get("ABC/234");
+		System.out.println(path.toAbsolutePath());
 	}
 	
 	@AnAnnotation(

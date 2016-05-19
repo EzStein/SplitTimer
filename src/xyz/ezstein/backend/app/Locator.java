@@ -1,8 +1,6 @@
 package xyz.ezstein.backend.app;
 import java.io.*;
 import java.nio.file.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A class used to locate files in a file structure in an OS independent way.
@@ -47,7 +45,7 @@ public class Locator
 	/**
 	 * Contains the name of this program.
 	 */
-	public static final String appTitle = "FractalApp";
+	public static final String appTitle = "SplitTimer";
 	
 	/**
 	 * Locates this file in the file system structure.
@@ -79,87 +77,6 @@ public class Locator
 	public static Path locateFile(String filePath) throws IOException
 	{
 		return locateFile(Paths.get(filePath));
-	}
-	
-	/**
-	 * Deletes the contents of the parent folder and then creates the file.
-	 * @param filePath
-	 * @return The path to the located file.
-	 * @throws IOException
-	 */
-	public static Path locateUniqueFile(Path filePath) throws IOException
-	{
-		Path file = getBaseDirectoryPath().resolve(filePath);
-		Files.createDirectories(file.getParent());
-		
-		/*Deletes contents of parent directory*/
-		Files.walk(file.getParent()).filter(Files::isRegularFile).forEach(fileToDelete ->{
-			try {
-				//System.out.println(fileToDelete.toString());
-				Files.delete(fileToDelete);
-				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			});
-		if(!Files.exists(file))
-		{
-			Files.createFile(file);
-		}
-		return file;
-	}
-	
-	/**
-	 * Deletes the contents of the parent folder and then creates the file.
-	 * @param filePath
-	 * @return The path to the located file.
-	 * @throws IOException
-	 */
-	public static Path locateUniqueFile(String filePath) throws IOException
-	{
-		return locateUniqueFile(Paths.get(filePath));
-	}
-	
-	/**
-	 * Attempts to locate the unique file in a directory. Use this if you know the location of
-	 * a file, but not its name. This method fails if there is not exactly one file
-	 * in the directory, or if the path is not a directory.
-	 * @param dirPath
-	 * @return the path to the unique file.
-	 * @throws IOException
-	 */
-	public static Path getUniqueFile(Path dirPath) throws IOException
-	{
-		Path dir = getBaseDirectoryPath().resolve(dirPath);
-		if(! Files.isDirectory(dir))
-		{
-			throw new IOException("NOT A DIRECTORY");
-		}
-		List<Path> files = Files.walk(dir).filter(Files::isRegularFile).collect(Collectors.toList());
-		if(files.size()>1)
-		{
-			throw new IOException("NOT UNIQUE FILE");
-		}
-		else if(files.size()==0)
-		{
-			throw new IOException("EMPTY DIRECTORY");
-		}
-		
-		return files.get(0);
-	}
-	
-	/**
-	 * Attempts to locate the unique file in a directory. Use this if you know the location of
-	 * a file, but not its name. This method fails if there is not exactly one file
-	 * in the directory, or if the path is not a directory.
-	 * @param dirPath
-	 * @return the path to the unique file.
-	 * @throws IOException
-	 */
-	public static Path getUniqueFile(String dirPath) throws IOException
-	{
-		return getUniqueFile(Paths.get(dirPath));
 	}
 	
 	/**
