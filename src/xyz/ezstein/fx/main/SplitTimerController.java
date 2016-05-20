@@ -30,7 +30,7 @@ public class SplitTimerController {
 	private Updater updater;
 	private ObjectProperty<SplitCollection> splitCollectionProperty;
 	private int eventIndex;
-	private String currentSession;
+	private int sessionIndex;
 	@FXML private Label timeLabel;
 	@FXML private MenuBar mainMenuBar;
 	@FXML private Menu applicationMenu;
@@ -49,11 +49,10 @@ public class SplitTimerController {
 	}
 	
 	public void initializeAsGUI(Stage stage, Scene scene){
-		this.currentSession="";
+		this.sessionIndex=-1;
 		this.eventIndex=0;
 		this.stage=stage;
 		stage.setOnCloseRequest(e->{
-			e.consume();
 			close(e);
 		});
 		startStopButton.setDisable(true);
@@ -146,8 +145,7 @@ public class SplitTimerController {
 		
 		scene.setOnKeyReleased((ke)->{
 			if(ke.getCode().equals(KeyCode.SPACE) && updater!=null && !updater.isTerminated()){
-				splitCollectionProperty.get().updateSession(currentSession, eventIndex, updater.getTime()-splitCollectionProperty.get().getSumOfTimeUntilEvent(eventIndex-1, currentSession));
-				
+				splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, updater.getTime());
 				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
 					eventIndex++;
 				} else {
@@ -259,13 +257,51 @@ public class SplitTimerController {
 	
 	
 	public void close(WindowEvent we){
+		we.consume();
 		if(updater!=null){
 			updater.stop();
 		}
-		System.out.println("CLOSING");
-		stage.close();
+		ResultType type = showSaveDialog();
+		switch(type){
+		case save:
+			saveCollection();
+			break;
+		case noSave:
+			stage.close();
+			break;
+		case cancel:
+			break;
+		}
+		
+		
+		
 	}
 	
+	public ResultType showSaveDialog(){
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		ButtonType saveButton = new ButtonType("Save");
+		ButtonType cancelButton = new ButtonType("Cancel");
+		ButtonType noSaveButton = new ButtonType("Don't Save");
+		alert.getButtonTypes().setAll(saveButton, noSaveButton,cancelButton);
+		Optional<ButtonType> type = alert.showAndWait();
+		if(type.isPresent()){
+			if(type.get().equals(saveButton)){
+				return ResultType.save;
+			} else if(type.get().equals(noSaveButton)){
+				return ResultType.noSave;
+			} else if(type.get().equals(cancelButton)){
+				return ResultType.cancel;
+			}
+		}
+		System.out.println("A");
+		return ResultType.noSave;
+		
+	}
+	
+	
+	private enum ResultType{
+		save,noSave,cancel;
+	}
 	
 	public void open(File file) {
 		try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))){
@@ -286,8 +322,8 @@ public class SplitTimerController {
 			splitCollectionProperty.get().changeDisplayedTime(i, 0);
 		}
 		eventIndex=0;
-		currentSession = "TMP_NAME" + UUID.randomUUID();
-		splitCollectionProperty.get().newSession(currentSession);
+		sessionIndex++;
+		splitCollectionProperty.get().newSession("TMP " + UUID.randomUUID());
 		updater = new Updater();
 		new Thread(updater).start();
 		startStopButton.setText("Stop");
@@ -355,30 +391,7 @@ public class SplitTimerController {
 		stage.show();
 	}
 	
-	@FXML
-	private void saveMenuItemClick(ActionEvent ae){
-		SplitCollection collection = splitCollectionProperty.get();
-		if(collection.getSavePath()==null){
-			saveAsMenuItemClick(ae);
-		} else {
-			try(ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(collection.getSavePath()))) {
-				out.writeObject(collection);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			Alert alert = new Alert(Alert.AlertType.INFORMATION);
-			alert.setContentText("Saved!");
-			alert.setTitle("Saving...");
-			alert.show();
-		}
-	}
-	
-	@FXML
-	private void saveAsMenuItemClick(ActionEvent ae){
+	public void saveAsCollection() {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Save...");
 		File file = null;
@@ -404,6 +417,37 @@ public class SplitTimerController {
 		alert.setContentText("Saved!");
 		alert.setTitle("Saving...");
 		alert.show();
+	}
+	
+	public void saveCollection(){
+		SplitCollection collection = splitCollectionProperty.get();
+		if(collection.getSavePath()==null){
+			saveAsCollection();
+		} else {
+			try(ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(collection.getSavePath()))) {
+				out.writeObject(collection);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Alert alert = new Alert(Alert.AlertType.INFORMATION);
+			alert.setContentText("Saved!");
+			alert.setTitle("Saving...");
+			alert.show();
+		}
+	}
+	
+	@FXML
+	private void saveMenuItemClick(ActionEvent ae){
+		saveCollection();
+	}
+	
+	@FXML
+	private void saveAsMenuItemClick(ActionEvent ae){
+		saveAsCollection();
 	}
 	
 	@FXML

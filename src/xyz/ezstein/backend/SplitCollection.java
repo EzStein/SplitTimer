@@ -23,7 +23,7 @@ public class SplitCollection implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private transient Path savePath;
 	private transient SimpleListProperty<SplitEvent> splitEvents;
-	private final HashMap<String, SplitSession> splitSessions;
+	private final ArrayList<SplitSession> splitSessions;
 	private final String name;
 	
 	/**
@@ -36,7 +36,7 @@ public class SplitCollection implements Serializable {
 		this.savePath=savePath;
 		this.name=name;
 		this.splitEvents=new SimpleListProperty<SplitEvent>(FXCollections.observableList(splitEvents));
-		this.splitSessions=new HashMap<String,SplitSession>();
+		this.splitSessions=new ArrayList<SplitSession>();
 		/*this.splitEvents.addListener(new ListChangeListener<SplitEvent>(){
 			@Override
 			public void onChanged(ListChangeListener.Change<? extends SplitEvent> c) {
@@ -109,7 +109,7 @@ public class SplitCollection implements Serializable {
 	 * @return a read only sorted set of splitSessions
 	 */
 	public Set<SplitSession> getUnmodifiableSplitSessions(){
-		return Collections.unmodifiableSortedSet(new TreeSet<SplitSession>(splitSessions.values()));
+		return Collections.unmodifiableSortedSet(new TreeSet<SplitSession>(splitSessions));
 	}
 	
 	
@@ -139,18 +139,19 @@ public class SplitCollection implements Serializable {
 	 */
 	public long getBestSessionTime(){
 		long time = Long.MAX_VALUE;
-		for(SplitSession ss:splitSessions.values()){
+		for(SplitSession ss:splitSessions){
 			time = Math.min(time, getSessionTime(ss));
 		}
 		return time;
 	}
 	
 	/*
-	 * FIX THIS METHOD!!!!!!!!!!!!!!!
+	 * FIXED!
 	 */
 	private SplitSession getBestSession(){
-		SplitSession session=new ArrayList<SplitSession>(splitSessions.values()).get(0);
-		for(SplitSession ss:splitSessions.values()){
+		SplitSession session= splitSessions.get(0);
+		for(int i=0; i<splitSessions.size()-1;i++){
+			SplitSession ss=splitSessions.get(i);
 			if(getSessionTime(ss)<getSessionTime(session)){
 				session = ss;
 			}
@@ -194,7 +195,7 @@ public class SplitCollection implements Serializable {
 	 */
 	public void newSession(String sessionName){
 		SplitSession session = new SplitSession(sessionName);
-		splitSessions.put(sessionName,session);
+		splitSessions.add(session);
 		for(SplitEvent event:splitEvents){
 			event.putSession(session,Long.MAX_VALUE);
 		}
@@ -224,8 +225,8 @@ public class SplitCollection implements Serializable {
 		return time;
 	}
 	
-	public long getSumOfTimeUntilEvent(int eventIndex, String splitSession){
-		return getSumOfTimeUntilEvent(eventIndex, splitSessions.get(splitSession));
+	public long getSumOfTimeUntilEvent(int eventIndex, int sessionIndex){
+		return getSumOfTimeUntilEvent(eventIndex, splitSessions.get(sessionIndex));
 	}
 	
 	/**
@@ -234,10 +235,11 @@ public class SplitCollection implements Serializable {
 	 * @param eventIndex
 	 * @param time
 	 */
-	public void updateSession(String sessionName, int eventIndex, long time){
+	public void updateSession(int eventIndex, int sessionIndex, long time){
 		SplitEvent event = splitEvents.get(eventIndex);
-		SplitSession session = splitSessions.get(sessionName);
-		event.putSession(session, time);
+		SplitSession session = splitSessions.get(sessionIndex);
+		
+		event.putSession(session, time-getSumOfTimeUntilEvent(eventIndex-1, sessionIndex));
 	}
 	
 	/**
@@ -247,8 +249,9 @@ public class SplitCollection implements Serializable {
 	public void newEvent(String eventName){
 		SplitEvent event = new SplitEvent(eventName);
 		splitEvents.add(event);
-		for(SplitSession ss: splitSessions.values()){
-			event.putSession(ss, -1);
+		
+		for(SplitSession ss: splitSessions){
+			event.putSession(ss, Long.MAX_VALUE);
 		}
 		
 	}
@@ -279,7 +282,7 @@ public class SplitCollection implements Serializable {
 		return out;
 	}
 	
-	private Map<String,SplitSession> getSplitSessions(){
+	private ArrayList<SplitSession> getSplitSessions(){
 		return splitSessions;
 	}
 	
