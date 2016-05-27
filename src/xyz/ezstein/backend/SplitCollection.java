@@ -7,6 +7,7 @@ import java.util.*;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import xyz.ezstein.backend.util.Util;
+import xyz.ezstein.fx.observable.SplitTimeType;
 
 /**
  * Holds a collection of SplitEvents which define the order of events for the split timer to work with.
@@ -37,20 +38,6 @@ public class SplitCollection implements Serializable {
 		this.name=name;
 		this.splitEvents=new SimpleListProperty<SplitEvent>(FXCollections.observableList(splitEvents));
 		this.splitSessions=new ArrayList<SplitSession>();
-		/*this.splitEvents.addListener(new ListChangeListener<SplitEvent>(){
-			@Override
-			public void onChanged(ListChangeListener.Change<? extends SplitEvent> c) {
-				while(c.next()){
-					if(c.wasAdded()){
-						for(SplitEvent se: c.getAddedSubList()){
-							for(SplitSession ss: splitSessions.values()){
-								se.putSession(ss, -1);
-							}
-						}
-					}
-				}
-			}
-		});*/
 	}
 	
 	/**
@@ -85,8 +72,6 @@ public class SplitCollection implements Serializable {
 	public SplitCollection(String name){
 		this(name, new ArrayList<SplitEvent>());
 	}
-	
-	
 	
 	/**
 	 * Returns the save path of this splitCollection
@@ -146,15 +131,20 @@ public class SplitCollection implements Serializable {
 	}
 	
 	/*
-	 * FIXED!
+	 * FIX
 	 */
 	private SplitSession getBestSession(){
 		SplitSession session= splitSessions.get(0);
-		for(int i=0; i<splitSessions.size()-1;i++){
+		for(int i=0; i<splitSessions.size();i++){
 			SplitSession ss=splitSessions.get(i);
-			if(getSessionTime(ss)<getSessionTime(session)){
-				session = ss;
+			if(ss.isComplete()){
+				if(getSessionTime(ss)<getSessionTime(session)){
+					session = ss;
+				}
 			}
+		}
+		if(session.isComplete()==false){
+			System.out.println("ERROR");
 		}
 		return session;
 	}
@@ -197,7 +187,7 @@ public class SplitCollection implements Serializable {
 		SplitSession session = new SplitSession(sessionName);
 		splitSessions.add(session);
 		for(SplitEvent event:splitEvents){
-			event.putSession(session,Long.MAX_VALUE);
+			event.putSession(session,-1);
 		}
 	}
 	
@@ -213,33 +203,70 @@ public class SplitCollection implements Serializable {
 	
 	public void changeDisplayedSplitTime(int eventIndex, long time){
 		long bestTime = getSumOfTimeUntilEvent(eventIndex, getBestSession());
-		System.out.println(eventIndex+ " " + Util.nanosToReadable( bestTime));
-		splitEvents.get(eventIndex).currentSplitTimeProperty().set(time-bestTime);
+		splitEvents.get(eventIndex).currentSplitTimeProperty().setSplitTime(time-bestTime);
+		long dif = time-bestTime;
+		long eventTime = time-getSumOfTimeUntilEvent(eventIndex-1, splitSessions.size()-1);
+		
+		long bestEventTime = Long.MAX_VALUE;
+		for(SplitSession ss:splitSessions){
+			if(ss.isComplete()){
+				bestEventTime = Math.min(splitEvents.get(eventIndex).getTime(ss),bestEventTime);
+			}
+		}
+
+		SplitTimeType type;
+		if(time-bestTime<0 && eventTime-bestEventTime<0){
+			type= SplitTimeType.LN;
+		} else if(time-bestTime>0 && eventTime-bestEventTime<0){
+			type= SplitTimeType.LP;
+		} else if(time-bestTime<0 && eventTime-bestEventTime>0){
+			type= SplitTimeType.GN;
+		} else if(time-bestTime>0 && eventTime-bestEventTime>0){
+			type= SplitTimeType.GP;
+		} else {
+			type= SplitTimeType.NEUTRAL;
+		}
+		
+		splitEvents.get(eventIndex).currentSplitTimeProperty().setType(type);
 	}
+	
+	
 	
 	private long getSumOfTimeUntilEvent(int eventIndex, SplitSession ss){
 		long time=0;
 		for(int i =0; i<=eventIndex; i++){
 			time+=splitEvents.get(i).getTime(ss);
+			
 		}
 		return time;
 	}
 	
 	public long getSumOfTimeUntilEvent(int eventIndex, int sessionIndex){
+		
 		return getSumOfTimeUntilEvent(eventIndex, splitSessions.get(sessionIndex));
 	}
 	
 	/**
 	 * Writes an update to a given splitEvent and splitSession pair.
-	 * @param sessionName
+	 * The input time must be the time up until the given event index.
 	 * @param eventIndex
+	 * @param sessionIndex 
 	 * @param time
 	 */
 	public void updateSession(int eventIndex, int sessionIndex, long time){
 		SplitEvent event = splitEvents.get(eventIndex);
 		SplitSession session = splitSessions.get(sessionIndex);
-		
 		event.putSession(session, time-getSumOfTimeUntilEvent(eventIndex-1, sessionIndex));
+		System.out.println(sessionIndex);
+		boolean complete = true;
+		for(SplitEvent se : splitEvents){
+			if(se.getTime(session)<=0){
+				complete=false;
+			}
+		}
+		if(complete){
+			session.setComplete(true);
+		}
 	}
 	
 	/**
@@ -251,12 +278,10 @@ public class SplitCollection implements Serializable {
 		splitEvents.add(event);
 		
 		for(SplitSession ss: splitSessions){
-			event.putSession(ss, Long.MAX_VALUE);
+			event.putSession(ss, -1);
+			ss.setComplete(false);
 		}
-		
 	}
-	
-	
 	
 	
 	

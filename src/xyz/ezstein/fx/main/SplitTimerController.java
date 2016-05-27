@@ -23,6 +23,7 @@ import javafx.scene.input.*;
 import javafx.stage.*;
 import javafx.util.*;
 import xyz.ezstein.fx.cells.*;
+import xyz.ezstein.fx.observable.SplitTime;
 
 public class SplitTimerController {
 	
@@ -30,7 +31,7 @@ public class SplitTimerController {
 	private Updater updater;
 	private ObjectProperty<SplitCollection> splitCollectionProperty;
 	private int eventIndex;
-	private int sessionIndex;
+	private boolean promptSave;
 	@FXML private Label timeLabel;
 	@FXML private MenuBar mainMenuBar;
 	@FXML private Menu applicationMenu;
@@ -38,7 +39,7 @@ public class SplitTimerController {
 	@FXML private TableView<SplitEvent> splitEventTable;
 	@FXML private TableColumn<SplitEvent, Number> timeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> iconTableColumn;
-	@FXML private TableColumn<SplitEvent, Number> splitTimeTableColumn;
+	@FXML private TableColumn<SplitEvent, SplitTime> splitTimeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
 	
 	/**
@@ -49,9 +50,9 @@ public class SplitTimerController {
 	}
 	
 	public void initializeAsGUI(Stage stage, Scene scene){
-		this.sessionIndex=-1;
 		this.eventIndex=0;
 		this.stage=stage;
+		this.promptSave=false;
 		stage.setOnCloseRequest(e->{
 			close(e);
 		});
@@ -70,18 +71,18 @@ public class SplitTimerController {
 		
 		
 		
-		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
+		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, SplitTime>, ObservableValue<SplitTime>>(){
 			@Override
-			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
+			public ObservableValue<SplitTime> call(CellDataFeatures<SplitEvent, SplitTime> splitEvent) {
 				// TODO Auto-generated method stub
 				return splitEvent.getValue().currentSplitTimeProperty();
 			}
 		});
 		
-		splitTimeTableColumn.setCellFactory(new Callback<TableColumn<SplitEvent, Number>, TableCell<SplitEvent, Number>>(){
+		splitTimeTableColumn.setCellFactory(new Callback<TableColumn<SplitEvent, SplitTime>, TableCell<SplitEvent, SplitTime>>(){
 			@Override
-			public TableCell<SplitEvent, Number> call(TableColumn<SplitEvent, Number> param) {
-				return new TimeTableCell();
+			public TableCell<SplitEvent, SplitTime> call(TableColumn<SplitEvent, SplitTime> param) {
+				return new SplitTimeTableCell();
 			}
 		});
 		
@@ -145,6 +146,7 @@ public class SplitTimerController {
 		
 		scene.setOnKeyReleased((ke)->{
 			if(ke.getCode().equals(KeyCode.SPACE) && updater!=null && !updater.isTerminated()){
+				int sessionIndex = splitCollectionProperty.get().getUnmodifiableSplitSessions().size()-1;
 				splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, updater.getTime());
 				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
 					eventIndex++;
@@ -251,6 +253,7 @@ public class SplitTimerController {
 				timeLabel.setText(Util.nanosToReadable(elapsedTime));
 				splitCollectionProperty.get().changeDisplayedTime(eventIndex, elapsedTime);
 				splitCollectionProperty.get().changeDisplayedSplitTime(eventIndex, elapsedTime);
+				
 			}
 		});
 	}
@@ -261,6 +264,7 @@ public class SplitTimerController {
 		if(updater!=null){
 			updater.stop();
 		}
+		
 		ResultType type = showSaveDialog();
 		switch(type){
 		case save:
@@ -272,12 +276,12 @@ public class SplitTimerController {
 		case cancel:
 			break;
 		}
-		
-		
-		
 	}
 	
 	public ResultType showSaveDialog(){
+		if(!promptSave){
+			return ResultType.noSave;
+		}
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
 		ButtonType saveButton = new ButtonType("Save");
 		ButtonType cancelButton = new ButtonType("Cancel");
@@ -318,11 +322,11 @@ public class SplitTimerController {
 	
 	@FXML
 	private void startStopButtonClick(ActionEvent ae){
+		promptSave=true;
 		for(int i=0; i<splitCollectionProperty.get().splitEventsProperty().size();i++){
 			splitCollectionProperty.get().changeDisplayedTime(i, 0);
 		}
 		eventIndex=0;
-		sessionIndex++;
 		splitCollectionProperty.get().newSession("TMP " + UUID.randomUUID());
 		updater = new Updater();
 		new Thread(updater).start();
@@ -332,6 +336,17 @@ public class SplitTimerController {
 	
 	@FXML
 	private void newMenuItemClick(ActionEvent ae){
+		
+		ResultType type = showSaveDialog();
+		switch(type){
+		case save:
+			saveCollection();
+			break;
+		case noSave:
+			break;
+		case cancel:
+			return;
+		}
 		Parent root = null;
 		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
 		
@@ -355,10 +370,21 @@ public class SplitTimerController {
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
 		stage.show();
+		promptSave=true;
 	}
 	
 	@FXML
 	private void openMenuItemClick(ActionEvent ae) {
+		ResultType type = showSaveDialog();
+		switch(type){
+		case save:
+			saveCollection();
+			break;
+		case noSave:
+			break;
+		case cancel:
+			return;
+		}
 		FileChooser fc = new FileChooser();
 		fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Split Collection (*.spc)","*.spc"));
 		File file = null;
@@ -370,6 +396,7 @@ public class SplitTimerController {
 	
 	@FXML
 	private void editMenuItemClick(ActionEvent ae){
+		promptSave = true;
 		Parent root = null;
 		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
 		
@@ -471,7 +498,7 @@ public class SplitTimerController {
 	
 	@FXML
 	private void quitMenuItemClick(ActionEvent ae){
-		
+		this.close(null);
 	}
 	@FXML
 	private void preferencesMenuItemClick(ActionEvent ae){

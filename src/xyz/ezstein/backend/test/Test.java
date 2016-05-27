@@ -1,5 +1,6 @@
 package xyz.ezstein.backend.test;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -19,8 +20,21 @@ public class Test {
 			}
 		}
 		System.out.println("]");*/
-		Path path = Paths.get("ABC/234");
-		System.out.println(path.toAbsolutePath());
+		//Path path = Paths.get("ABC/234");
+		//System.out.println(path.toAbsolutePath());\
+		
+		BigInteger mod = new BigInteger("200");
+		for(BigInteger i= new BigInteger("0"); i.compareTo(mod.subtract(new BigInteger("1")))<=0;i=i.add(new BigInteger("1"))){
+			BigInteger a = i.modPow(new BigInteger("1000"), mod);
+			if(i.subtract(mod.divide(new BigInteger("2"))).abs().intValue()<=2){
+				System.out.println(a);
+			}
+			
+			
+		}		
+		
+		
+			
 	}
 	
 	@AnAnnotation(

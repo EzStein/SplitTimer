@@ -9,10 +9,12 @@ public class SplitSession implements Serializable, Comparable<SplitSession> {
 	private final String name;
 	private final int id;
 	private final Instant date;
+	private boolean complete;
 	private SplitSession(String name, int id){
 		this.name=name;
 		this.id=id;
 		this.date=Instant.now();
+		this.complete=false;
 	}
 	
 	public SplitSession(String name){
@@ -33,6 +35,14 @@ public class SplitSession implements Serializable, Comparable<SplitSession> {
 	
 	public Instant getDate(){
 		return date;
+	}
+	
+	public void setComplete(boolean complete){
+		this.complete=complete;
+	}
+	
+	public boolean isComplete(){
+		return complete;
 	}
 
 	@Override
@@ -56,7 +66,11 @@ public class SplitSession implements Serializable, Comparable<SplitSession> {
 	public int hashCode(){
 		return name.hashCode()+id*100+date.hashCode()*-34;
 	}
-
+	
+	/**
+	 * Compares the splitSession by the instant in which it was created
+	 * If the instants are identical, it compares by name string
+	 */
 	@Override
 	public int compareTo(SplitSession ss) {
 		if(date.compareTo(ss.getDate())==0){
