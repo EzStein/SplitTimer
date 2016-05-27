@@ -41,10 +41,10 @@
 				<Label text="Split: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
 				<Label text="Pause: " GridPane.columnIndex="0" GridPane.rowIndex="2"/>
 				<Label text="Stop: " GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-				<TextField fx:id="startTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-				<TextField fx:id="splitTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-				<TextField fx:id="pauseTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-				<TextField fx:id="stopTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+				<TextField fx:id="startTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+				<TextField fx:id="splitTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+				<TextField fx:id="pauseTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+				<TextField fx:id="stopTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
 			</GridPane>
 		</Tab>
 		<Tab text="Options" closable="false">
