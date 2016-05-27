@@ -1,6 +1,7 @@
-package xyz.ezstein.fx.options;
+package xyz.ezstein.fx.editor;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 
@@ -16,12 +17,10 @@ import xyz.ezstein.backend.*;
 import xyz.ezstein.backend.util.*;
 import xyz.ezstein.fx.cells.*;
 
-public class OptionsController {
+public class EditorController {
 	
 	@FXML private TableView<SplitEvent> splitEventTable;
-	@FXML private TableColumn<SplitEvent, Number> timeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> iconTableColumn;
-	@FXML private TableColumn<SplitEvent, Number> splitTimeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
 	private SplitCollection splitCollection;
 	private Callback<SplitCollection, Void> callBackOnClose;
@@ -41,23 +40,8 @@ public class OptionsController {
 		splitEventTable.setItems(splitCollection.splitEventsProperty());
 		stage.setOnCloseRequest(we->{
 			we.consume();
-			
-			close();
-			stage.close();
+			closeRequest(false);
 		});
-		timeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
-			@Override
-			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
-				return new SimpleLongProperty(0);
-			}
-		});
-		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, Number>, ObservableValue<Number>>(){
-			@Override
-			public ObservableValue<Number> call(CellDataFeatures<SplitEvent, Number> splitEvent) {
-				return new SimpleLongProperty(0);
-			}
-		});
-		
 		
 		
 		nameTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
@@ -103,7 +87,10 @@ public class OptionsController {
 			column.setCellFactory((col)->{
 				return new TimeTableCell();
 			});
+			LocalDateTime time = LocalDateTime.ofInstant(session.getDate(),ZoneId.systemDefault());
+			column.setText(time.format(DateTimeFormatter.ofPattern("hh:mm MMM/d/yyyy")));
 			splitEventTable.getColumns().add(column);
+			column.setSortable(false);
 		}
 		
 		splitEventTable.widthProperty().addListener(new ChangeListener<Number>()
@@ -122,10 +109,11 @@ public class OptionsController {
 		});
 	}
 	
-	public void close(){
-		if(callBackOnClose!=null){
+	public void closeRequest(boolean apply){
+		if(callBackOnClose!=null && apply){
 			callBackOnClose.call(splitCollection);
 		}
+		stage.close();
 	}
 	
 	public void setOnClose(Callback<SplitCollection,Void> callBack){
@@ -143,4 +131,16 @@ public class OptionsController {
 		splitEventTable.getItems().remove(splitEventTable.getSelectionModel().getSelectedItem());
 	}
 	
+	/*
+	 * RESOLVE APPLY ISSUE For EDIT BUT NOT NEW
+	 */
+	@FXML
+	private void applyButtonClick(ActionEvent ae){
+		closeRequest(true);
+	}
+	
+	@FXML
+	private void cancelButtonClick(ActionEvent ae){
+		closeRequest(false);
+	}
 }

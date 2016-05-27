@@ -1,4 +1,4 @@
-package xyz.ezstein.fx.options;
+package xyz.ezstein.fx.editor;
 
 import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;

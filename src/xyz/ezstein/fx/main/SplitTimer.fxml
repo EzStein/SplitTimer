@@ -45,15 +45,15 @@
 				<items>
 					<MenuItem text="New..." onAction="#newMenuItemClick"/>
 					<MenuItem text="Open..." onAction="#openMenuItemClick"/>
-					<MenuItem text="Edit..." onAction="#editMenuItemClick"/>
+					<SeparatorMenuItem />
 					<MenuItem text="Save" onAction="#saveMenuItemClick"/>
 					<MenuItem text="Save As..." onAction="#saveAsMenuItemClick"/>
+					<SeparatorMenuItem />
+					<MenuItem text="Edit..." onAction="#editMenuItemClick"/>
 				</items>
 			</Menu>
-			<Menu text="Edit">
+			<Menu text="Action">
 				<items>
-					<MenuItem text="Options..." onAction="#optionsMenuItemClick"/>
-					<SeparatorMenuItem />
 					<MenuItem text="Start" onAction="#startMenuItemClick"/>
 					<MenuItem text="Pause" onAction="#pauseMenuItemClick"/>
 					<MenuItem text="Stop" onAction="#stopMenuItemClick"/>
@@ -70,10 +70,10 @@
 			
 			<TableView fx:id="splitEventTable">
 				<columns>
-					<TableColumn fx:id="nameTableColumn" text="Name"/>
-					<TableColumn fx:id="timeTableColumn" text="Time"/>
-					<TableColumn fx:id="iconTableColumn" text="Icon"/>
-					<TableColumn fx:id="splitTimeTableColumn" text="Split Time"/>
+					<TableColumn fx:id="nameTableColumn" text="Name" sortable="false"/>
+					<TableColumn fx:id="iconTableColumn" text="Icon" sortable="false"/>
+					<TableColumn fx:id="timeTableColumn" text="Time" sortable="false"/>
+					<TableColumn fx:id="splitTimeTableColumn" text="Split Time" sortable="false"/>
 				</columns>
 			</TableView>
 			

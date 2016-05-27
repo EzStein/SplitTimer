@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.application.*?>
+<?import javafx.beans.property.*?>
+<?import javafx.beans.value.*?>
+<?import javafx.collections.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Alert.*?>
+<?import javafx.scene.control.ButtonBar.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.stage.*?>
+<?import javafx.util.*?>
+<?import javafx.scene.layout.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.image.*?>
+
+<VBox spacing="10" fx:controller="xyz.ezstein.fx.preferences.PreferencesController" xmlns:fx="fx">
+	<stylesheets>
+		<URL value="@Preferences.css"/>
+	</stylesheets>
+	<padding>
+		<Insets top="10" bottom="10" left="10" right="10"/>
+	</padding>
+	<TabPane>
+		<Tab text="Keys" closable="false">
+			<GridPane vgap="10" hgap="10">
+				<padding>
+					<Insets top="10" bottom="10" left="10" right="10" />
+				</padding>
+				<Label text="Start: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<Label text="Split: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+				<Label text="Pause: " GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+				<Label text="Stop: " GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+				<TextField fx:id="startTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+				<TextField fx:id="splitTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+				<TextField fx:id="pauseTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+				<TextField fx:id="stopTextField" text="" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+			</GridPane>
+		</Tab>
+		<Tab text="Options" closable="false">
+			<GridPane vgap="10" hgap="10">
+				<padding>
+					<Insets top="10" bottom="10" left="10" right="10" />
+				</padding>
+				<Label text="Background: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<TextField fx:id="backgroundTextField" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+			</GridPane>
+		</Tab>
+		<Tab text="Advanced" closable="false">
+			<GridPane vgap="10" hgap="10">
+				<padding>
+					<Insets top="10" bottom="10" left="10" right="10" />
+				</padding>
+				<Label text="Delay: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<TextField fx:id="delayTextField" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+			</GridPane>
+		</Tab>
+	</TabPane>
+	<HBox spacing="10">
+		<padding>
+			<Insets top="10" bottom="10" left="10" right="10"/>
+		</padding>
+		<Button text="Ok" onAction="#okButtonClick"/>
+		<Button text="Cancel" onAction="#cancelButtonClick"/>
+	</HBox>
+</VBox>

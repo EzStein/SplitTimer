@@ -24,9 +24,9 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.image.*?>
 
-<BorderPane fx:controller="xyz.ezstein.fx.options.OptionsController" xmlns:fx="fx" prefWidth="400" prefHeight="400">
+<BorderPane fx:controller="xyz.ezstein.fx.editor.EditorController" xmlns:fx="fx" prefWidth="400" prefHeight="400">
 	<stylesheets>
-		<URL value="@Options.css" />
+		<URL value="@Editor.css" />
 	</stylesheets>
 	<center>
 		<VBox spacing="10">
@@ -37,9 +37,7 @@
 			<TableView fx:id="splitEventTable">
 				<columns>
 					<TableColumn fx:id="nameTableColumn" text="Name" sortable="false"/>
-					<TableColumn fx:id="timeTableColumn" text="Time" sortable="false"/>
 					<TableColumn fx:id="iconTableColumn" text="Icon" sortable="false"/>
-					<TableColumn fx:id="splitTimeTableColumn" text="Split Time" sortable="false"/>
 				</columns>
 			</TableView>
 			<HBox spacing="10">
@@ -48,6 +46,8 @@
 				</padding>
 				<Button text="Add Event" onAction="#addEventButtonClick"/>
 				<Button text="Remove Event" onAction="#removeEventButtonClick"/>
+				<Button text="Apply" onAction="#applyButtonClick"/>
+				<Button text="Cancel" onAction="#cancelButtonClick"/>
 			</HBox>
 		</VBox>
 	</center>

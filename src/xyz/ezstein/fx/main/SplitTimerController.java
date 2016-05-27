@@ -9,7 +9,7 @@ import com.sun.javafx.scene.control.skin.*;
 import de.codecentric.centerdevice.*;
 import xyz.ezstein.backend.app.*;
 import xyz.ezstein.backend.util.*;
-import xyz.ezstein.fx.options.*;
+import xyz.ezstein.fx.editor.*;
 import xyz.ezstein.backend.*;
 import javafx.application.*;
 import javafx.beans.property.*;
@@ -24,6 +24,7 @@ import javafx.stage.*;
 import javafx.util.*;
 import xyz.ezstein.fx.cells.*;
 import xyz.ezstein.fx.observable.SplitTime;
+import xyz.ezstein.fx.preferences.PreferencesController;
 
 public class SplitTimerController {
 	
@@ -348,7 +349,7 @@ public class SplitTimerController {
 			return;
 		}
 		Parent root = null;
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/editor/Editor.fxml"));
 		
 		try {
 			root = loader.load();
@@ -361,7 +362,7 @@ public class SplitTimerController {
 		Stage stage = new Stage();
 		stage.initOwner(this.stage);
 		stage.initModality(Modality.WINDOW_MODAL);
-		OptionsController oc = ((OptionsController) loader.getController());
+		EditorController oc = ((EditorController) loader.getController());
 		oc.initializeAsGUI(stage);
 		oc.setOnClose((splitCollection)->{
 			splitCollectionProperty.set(splitCollection);
@@ -398,7 +399,7 @@ public class SplitTimerController {
 	private void editMenuItemClick(ActionEvent ae){
 		promptSave = true;
 		Parent root = null;
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/options/Options.fxml"));
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/editor/Editor.fxml"));
 		
 		try {
 			root = loader.load();
@@ -411,7 +412,7 @@ public class SplitTimerController {
 		Stage stage = new Stage();
 		stage.initOwner(this.stage);
 		stage.initModality(Modality.WINDOW_MODAL);
-		OptionsController oc = ((OptionsController) loader.getController());
+		EditorController oc = ((EditorController) loader.getController());
 		oc.initializeAsGUI(stage,splitCollectionProperty.get());
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
@@ -478,11 +479,6 @@ public class SplitTimerController {
 	}
 	
 	@FXML
-	private void optionsMenuItemClick(ActionEvent ae){
-		
-	}
-	
-	@FXML
 	private void startMenuItemClick(ActionEvent ae){
 		
 	}
@@ -491,6 +487,7 @@ public class SplitTimerController {
 	private void stopMenuItemClick(ActionEvent ae){
 		
 	}
+	
 	@FXML
 	private void pauseMenuItemClick(ActionEvent ae){
 		
@@ -502,8 +499,26 @@ public class SplitTimerController {
 	}
 	@FXML
 	private void preferencesMenuItemClick(ActionEvent ae){
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/preferences/Preferences.fxml"));
+		Parent root = null;
+		try {
+			root = loader.load();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}
+		Stage stage = new Stage();
+		stage.initOwner(this.stage);
+		stage.initModality(Modality.WINDOW_MODAL);
+		PreferencesController oc = ((PreferencesController) loader.getController());
+		oc.initializeAsGUI(stage);
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 		
 	}
+	
 	@FXML
 	private void aboutMenuItemClick(ActionEvent ae){
 		
