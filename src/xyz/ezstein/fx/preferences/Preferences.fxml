@@ -32,7 +32,7 @@
 		<Insets top="10" bottom="10" left="10" right="10"/>
 	</padding>
 	<TabPane>
-		<Tab text="Keys" closable="false">
+		<Tab text="Controls" closable="false">
 			<GridPane vgap="10" hgap="10">
 				<padding>
 					<Insets top="10" bottom="10" left="10" right="10" />
@@ -41,18 +41,44 @@
 				<Label text="Split: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
 				<Label text="Pause: " GridPane.columnIndex="0" GridPane.rowIndex="2"/>
 				<Label text="Stop: " GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+				<Label text="Skip: " GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+				<Label text="Undo: " GridPane.columnIndex="0" GridPane.rowIndex="5"/>
 				<TextField fx:id="startTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 				<TextField fx:id="splitTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 				<TextField fx:id="pauseTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 				<TextField fx:id="stopTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+				<TextField fx:id="skipTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+				<TextField fx:id="undoTextField" text="" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
 			</GridPane>
 		</Tab>
-		<Tab text="Options" closable="false">
+		<Tab text="Colors" closable="false">
+			<GridPane vgap="10" hgap="10">
+				<padding>
+					<Insets top="10" bottom="10" left="10" right="10" />
+				</padding>
+				<Label text="Best Split Time: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<Label text="Gained Time Ahead: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+				<Label text="Lost Time Ahead: " GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+				<Label text="Gained Time Behind: " GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+				<Label text="Lost Time Behind: " GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+				<ColorPicker fx:id="bestSplitTimeColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+				<ColorPicker fx:id="gainedTimeAheadColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+				<ColorPicker fx:id="lostTimeAheadColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+				<ColorPicker fx:id="gainedTimeBehindColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+				<ColorPicker fx:id="lostTimeBehindColorPicker" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+			</GridPane>
+		</Tab>
+		<Tab text="UI Customization" closable="false">
 			<GridPane vgap="10" hgap="10">
 				<padding>
 					<Insets top="10" bottom="10" left="10" right="10" />
 				</padding>
 				<Label text="Background: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+				<CheckBox fx:id="showSplitTimeCheckBox" text="Show Split Time" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+				<CheckBox fx:id="showDeltaEventTimeCheckBox" text="Show Delta Event Time" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+				<CheckBox fx:id="showPersonalBestCheckBox" text="Show Personal Best"  GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+				<CheckBox fx:id="showSumOfBestSplitsCheckBox" text="Show Sum Of Best Splits" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+				
 				<TextField fx:id="backgroundTextField" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 			</GridPane>
 		</Tab>

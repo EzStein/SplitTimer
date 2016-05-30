@@ -33,15 +33,20 @@ public class SplitTimerController {
 	private ObjectProperty<SplitCollection> splitCollectionProperty;
 	private int eventIndex;
 	private boolean promptSave;
+	private Scene preferencesRoot;
+	private Scene editorRoot;
+	private EditorController editorController;
+	private PreferencesController preferencesController;
 	@FXML private Label timeLabel;
 	@FXML private MenuBar mainMenuBar;
 	@FXML private Menu applicationMenu;
-	@FXML private Button startStopButton;
 	@FXML private TableView<SplitEvent> splitEventTable;
 	@FXML private TableColumn<SplitEvent, Number> timeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> iconTableColumn;
 	@FXML private TableColumn<SplitEvent, SplitTime> splitTimeTableColumn;
+	@FXML private TableColumn<SplitEvent, SplitTime> eventTimeTableColumn;
 	@FXML private TableColumn<SplitEvent, String> nameTableColumn;
+	
 	
 	/**
 	 * Called by the FXML loader immediately after this controller object is constructed.
@@ -50,14 +55,20 @@ public class SplitTimerController {
 		System.out.println("INITIALIZED");
 	}
 	
-	public void initializeAsGUI(Stage stage, Scene scene){
+	public void initializeAsGUI(Stage stage) {
 		this.eventIndex=0;
 		this.stage=stage;
 		this.promptSave=false;
-		stage.setOnCloseRequest(e->{
-			close(e);
+		this.updater = new Updater(this);
+		this.splitCollectionProperty=new SimpleObjectProperty<SplitCollection>(new SplitCollection());
+		splitCollectionProperty.addListener(new ChangeListener<SplitCollection>(){
+			@Override
+			public void changed(ObservableValue<? extends SplitCollection> observable, SplitCollection oldValue,
+					SplitCollection newValue) {
+				splitEventTable.setItems(splitCollectionProperty.get().splitEventsProperty());
+			}
 		});
-		startStopButton.setDisable(true);
+		
 		if(Locator.isMac())
 		{
 			mainMenuBar.getMenus().remove(applicationMenu);
@@ -69,18 +80,185 @@ public class SplitTimerController {
 			tk.setApplicationMenu(applicationMenu);
 		}
 		
+		loadFXML();
+		buildTable();
+		
+		stage.setOnCloseRequest(e->{
+			close(e);
+		});
+		
+		stage.getScene().setOnKeyReleased((ke)->{
+			ke.consume();
+			switch(ke.getCode()){
+				case S:
+					if(!updater.isTerminated()){
+						if(!updater.isPaused()){
+							split();
+						}
+					} else {
+						start();
+					}
+					break;
+				case SPACE:
+					if(!updater.isTerminated()){
+						pause();
+					}
+					break;
+				case BACK_SPACE:
+					if(!updater.isTerminated()){
+						undo();
+					}
+					break;
+				case ENTER:
+					if(!updater.isTerminated()){
+						skip();
+					}
+					break;
+				case COMMAND:
+					if(!updater.isTerminated()){
+						stop();
+					}
+					break;
+			}
+		});
 		
 		
+
+	}
+	
+	private void pause(){
+		System.out.println("CHECKING");
+		if(updater.isPaused()){
+			updater.unpause();
+		} else {
+			updater.pause();
+		}
+	}
+	
+	private void start(){
+		promptSave=true;
+		splitCollectionProperty.get().newSession("TMP " + UUID.randomUUID());
+		for(int i=0; i<splitCollectionProperty.get().splitEventsProperty().size();i++){
+			splitCollectionProperty.get().updateDisplay(i, 0);
+		}
+		eventIndex=0;
+		
+		updater.runLater();
+	}
+	
+	private void stop(){
+		new Thread(()->{
+			updater.stop();
+			updater.awaitTermination();
+			eventIndex=0;
+			splitCollectionProperty.get().deleteSession(splitCollectionProperty.get().getSplitSessionSize()-1);
+			updateUITime(0);
+			for(int i=0; i<splitCollectionProperty.get().splitEventsProperty().size();i++){
+				splitCollectionProperty.get().updateDisplay(i, 0);
+			}
+		}).start();
+		
+	}
+	
+	/*
+	 * FIX!!!!
+	 */
+	private void skip(){
+		if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
+			int sessionIndex = splitCollectionProperty.get().getUnmodifiableSplitSessions().size()-1;
+			splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, -1);
+			eventIndex++;
+		}
+	}
+	
+	private void undo(){
+		if(eventIndex!=0){
+			int sessionIndex = splitCollectionProperty.get().getUnmodifiableSplitSessions().size()-1;
+			splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, -1);
+			eventIndex--;
+		}
+	}
+	
+	private void split(){
+		int sessionIndex = splitCollectionProperty.get().getUnmodifiableSplitSessions().size()-1;
+		splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, updater.getTime());
+		if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
+			eventIndex++;
+		} else {
+			new Thread(()->{
+				updater.stop();
+				updater.awaitTermination();
+				eventIndex=0;
+			}).start();
+		}
+	}
+	
+	private void loadFXML(){
+		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/editor/Editor.fxml"));
+		
+		try {
+			editorRoot = new Scene(loader.load());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(1);
+		}
+		editorController = ((EditorController) loader.getController());
+		editorController.initializeAsGUI();
+		
+		loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/preferences/Preferences.fxml"));
+		try {
+			preferencesRoot = new Scene(loader.load());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}
+		preferencesController = (PreferencesController)loader.getController();
+		preferencesController.initializeAsGUI();
+	}
+	
+	
+	private void buildTable(){
+		splitEventTable.widthProperty().addListener(new ChangeListener<Number>()
+		{
+		    @Override
+		    public void changed(ObservableValue<? extends Number> source, Number oldWidth, Number newWidth)
+		    {
+		        TableHeaderRow header = (TableHeaderRow) splitEventTable.lookup("TableHeaderRow");
+		        header.reorderingProperty().addListener(new ChangeListener<Boolean>() {
+		            @Override
+		            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+		                header.setReordering(false);
+		            }
+		        });
+		    }
+		});
 		
 		splitTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, SplitTime>, ObservableValue<SplitTime>>(){
 			@Override
 			public ObservableValue<SplitTime> call(CellDataFeatures<SplitEvent, SplitTime> splitEvent) {
 				// TODO Auto-generated method stub
-				return splitEvent.getValue().currentSplitTimeProperty();
+				return splitEvent.getValue().deltaSplitTimeProperty();
 			}
 		});
 		
 		splitTimeTableColumn.setCellFactory(new Callback<TableColumn<SplitEvent, SplitTime>, TableCell<SplitEvent, SplitTime>>(){
+			@Override
+			public TableCell<SplitEvent, SplitTime> call(TableColumn<SplitEvent, SplitTime> param) {
+				return new SplitTimeTableCell();
+			}
+		});
+		
+		eventTimeTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, SplitTime>, ObservableValue<SplitTime>>(){
+			@Override
+			public ObservableValue<SplitTime> call(CellDataFeatures<SplitEvent, SplitTime> splitEvent) {
+				// TODO Auto-generated method stub
+				return splitEvent.getValue().deltaEventTimeProperty();
+			}
+		});
+		
+		eventTimeTableColumn.setCellFactory(new Callback<TableColumn<SplitEvent, SplitTime>, TableCell<SplitEvent, SplitTime>>(){
 			@Override
 			public TableCell<SplitEvent, SplitTime> call(TableColumn<SplitEvent, SplitTime> param) {
 				return new SplitTimeTableCell();
@@ -128,133 +306,15 @@ public class SplitTimerController {
 				return new TimeTableCell();
 			}
 		});
-		
-		
-		splitCollectionProperty=new SimpleObjectProperty<SplitCollection>();
-		splitCollectionProperty.addListener(new ChangeListener<SplitCollection>(){
-			@Override
-			public void changed(ObservableValue<? extends SplitCollection> observable, SplitCollection oldValue,
-					SplitCollection newValue) {
-				splitEventTable.setItems(splitCollectionProperty.get().splitEventsProperty());
-				if(splitCollectionProperty.get().splitEventsProperty().size()<=0){
-					startStopButton.setDisable(true);
-				} else {
-					startStopButton.setDisable(false);
-				}
-			} 
-		});
-		splitCollectionProperty.set(new SplitCollection());
-		
-		scene.setOnKeyReleased((ke)->{
-			if(ke.getCode().equals(KeyCode.SPACE) && updater!=null && !updater.isTerminated()){
-				int sessionIndex = splitCollectionProperty.get().getUnmodifiableSplitSessions().size()-1;
-				splitCollectionProperty.get().updateSession(eventIndex, sessionIndex, updater.getTime());
-				if(eventIndex+1!=splitCollectionProperty.get().splitEventsProperty().size()){
-					eventIndex++;
-				} else {
-					new Thread(()->{
-						updater.stop();
-						updater.join();
-						eventIndex=0;
-						Platform.runLater(()->{
-							startStopButton.setText("Start");
-							startStopButton.setDisable(false);
-						});
-						
-					}).start();
-				}
-			}
-		});
-		
-		splitEventTable.widthProperty().addListener(new ChangeListener<Number>()
-		{
-		    @Override
-		    public void changed(ObservableValue<? extends Number> source, Number oldWidth, Number newWidth)
-		    {
-		        TableHeaderRow header = (TableHeaderRow) splitEventTable.lookup("TableHeaderRow");
-		        header.reorderingProperty().addListener(new ChangeListener<Boolean>() {
-		            @Override
-		            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-		                header.setReordering(false);
-		            }
-		        });
-		    }
-		});
-
 	}
 	
-	private class Updater implements Runnable {
-		private long startTime;
-		private long currentTime;
-		private boolean close;
-		private boolean terminated;
-		private Object lock;
-		
-		public Updater(){
-			lock = new Object();
-			this.close=false;
-			terminated=false;
-			startTime=0;
-			currentTime=0;
-		}
-		
-		@Override
-		public void run() {
-			startTime=System.nanoTime();
-			while(!close){
-				try {
-					Thread.sleep(20);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				currentTime=System.nanoTime();
-				long elapsed = currentTime-startTime;
-				updateUITime(elapsed);
-			}
-			terminated=true;
-			synchronized(lock){
-				lock.notifyAll();
-			}
-			System.out.println("ABC");
-		}
-		
-		public long getTime(){
-			long elapsed = currentTime-startTime;
-			return elapsed;
-		}
-		
-		public void join(){
-			synchronized(lock){
-				while(!terminated){
-					try {
-						lock.wait();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-			System.out.println("DONE");
-			
-		}
-		
-		public void stop(){
-			close=true;
-		}
-		
-		public boolean isTerminated(){
-			return terminated;
-		}
-	}
+	
 	
 	public void updateUITime(long elapsedTime){
 		Platform.runLater(()->{
 			if(!updater.isTerminated()){
 				timeLabel.setText(Util.nanosToReadable(elapsedTime));
-				splitCollectionProperty.get().changeDisplayedTime(eventIndex, elapsedTime);
-				splitCollectionProperty.get().changeDisplayedSplitTime(eventIndex, elapsedTime);
-				
+				splitCollectionProperty.get().updateDisplay(eventIndex, elapsedTime);
 			}
 		});
 	}
@@ -280,7 +340,7 @@ public class SplitTimerController {
 	}
 	
 	public ResultType showSaveDialog(){
-		if(!promptSave){
+		if(!promptSave) {
 			return ResultType.noSave;
 		}
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -300,11 +360,10 @@ public class SplitTimerController {
 		}
 		System.out.println("A");
 		return ResultType.noSave;
-		
 	}
 	
 	
-	private enum ResultType{
+	private enum ResultType {
 		save,noSave,cancel;
 	}
 	
@@ -321,58 +380,6 @@ public class SplitTimerController {
 		System.out.println(splitCollectionProperty.get());
 	}
 	
-	@FXML
-	private void startStopButtonClick(ActionEvent ae){
-		promptSave=true;
-		for(int i=0; i<splitCollectionProperty.get().splitEventsProperty().size();i++){
-			splitCollectionProperty.get().changeDisplayedTime(i, 0);
-		}
-		eventIndex=0;
-		splitCollectionProperty.get().newSession("TMP " + UUID.randomUUID());
-		updater = new Updater();
-		new Thread(updater).start();
-		startStopButton.setText("Stop");
-		startStopButton.setDisable(true);
-	}
-	
-	@FXML
-	private void newMenuItemClick(ActionEvent ae){
-		
-		ResultType type = showSaveDialog();
-		switch(type){
-		case save:
-			saveCollection();
-			break;
-		case noSave:
-			break;
-		case cancel:
-			return;
-		}
-		Parent root = null;
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/editor/Editor.fxml"));
-		
-		try {
-			root = loader.load();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.exit(1);
-		}
-		
-		Stage stage = new Stage();
-		stage.initOwner(this.stage);
-		stage.initModality(Modality.WINDOW_MODAL);
-		EditorController oc = ((EditorController) loader.getController());
-		oc.initializeAsGUI(stage);
-		oc.setOnClose((splitCollection)->{
-			splitCollectionProperty.set(splitCollection);
-			return null;
-		});
-		Scene scene = new Scene(root);
-		stage.setScene(scene);
-		stage.show();
-		promptSave=true;
-	}
 	
 	@FXML
 	private void openMenuItemClick(ActionEvent ae) {
@@ -398,25 +405,43 @@ public class SplitTimerController {
 	@FXML
 	private void editMenuItemClick(ActionEvent ae){
 		promptSave = true;
-		Parent root = null;
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/editor/Editor.fxml"));
+		Stage stage = new Stage();
+		stage.initOwner(this.stage);
+		stage.initModality(Modality.WINDOW_MODAL);
+		editorController.reinitialize(stage,splitCollectionProperty.get());
+		editorController.setOnClose((a)->{return null;});
+		stage.setScene(editorRoot);
+		stage.show();
+	}
+	
+	@FXML
+	private void newMenuItemClick(ActionEvent ae){
 		
-		try {
-			root = loader.load();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.exit(1);
+		ResultType type = showSaveDialog();
+		switch(type){
+		case save:
+			saveCollection();
+			break;
+		case noSave:
+			break;
+		case cancel:
+			return;
 		}
+		
 		
 		Stage stage = new Stage();
 		stage.initOwner(this.stage);
 		stage.initModality(Modality.WINDOW_MODAL);
-		EditorController oc = ((EditorController) loader.getController());
-		oc.initializeAsGUI(stage,splitCollectionProperty.get());
-		Scene scene = new Scene(root);
-		stage.setScene(scene);
+		stage.setScene(editorRoot);
+		editorController.reinitialize(stage, new SplitCollection());
+		editorController.setOnClose((splitCollection)->{
+			splitCollectionProperty.set(splitCollection);
+			
+			return null;
+		});
+		
 		stage.show();
+		promptSave=true;
 	}
 	
 	public void saveAsCollection() {
@@ -499,22 +524,12 @@ public class SplitTimerController {
 	}
 	@FXML
 	private void preferencesMenuItemClick(ActionEvent ae){
-		FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/xyz/ezstein/fx/preferences/Preferences.fxml"));
-		Parent root = null;
-		try {
-			root = loader.load();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(1);
-		}
+		
 		Stage stage = new Stage();
 		stage.initOwner(this.stage);
 		stage.initModality(Modality.WINDOW_MODAL);
-		PreferencesController oc = ((PreferencesController) loader.getController());
-		oc.initializeAsGUI(stage);
-		Scene scene = new Scene(root);
-		stage.setScene(scene);
+		preferencesController.reinitialize(stage);
+		stage.setScene(preferencesRoot);
 		stage.show();
 		
 	}

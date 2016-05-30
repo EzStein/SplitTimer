@@ -130,9 +130,6 @@ public class SplitCollection implements Serializable {
 		return time;
 	}
 	
-	/*
-	 * FIX
-	 */
 	private SplitSession getBestSession(){
 		SplitSession session= splitSessions.get(0);
 		for(int i=0; i<splitSessions.size();i++){
@@ -196,40 +193,49 @@ public class SplitCollection implements Serializable {
 	 * @param eventIndex
 	 * @param time
 	 */
-	public void changeDisplayedTime(int eventIndex, long time){
+	private void updateTime(int eventIndex, long time){
 		SplitEvent event = splitEvents.get(eventIndex);
 		event.currentTimeProperty().set(time);
 	}
 	
-	public void changeDisplayedSplitTime(int eventIndex, long time){
+	public void updateDisplay(int eventIndex, long time){
+		updateTime(eventIndex, time);
 		long bestTime = getSumOfTimeUntilEvent(eventIndex, getBestSession());
-		splitEvents.get(eventIndex).currentSplitTimeProperty().setSplitTime(time-bestTime);
-		long dif = time-bestTime;
 		long eventTime = time-getSumOfTimeUntilEvent(eventIndex-1, splitSessions.size()-1);
-		
 		long bestEventTime = Long.MAX_VALUE;
 		for(SplitSession ss:splitSessions){
 			if(ss.isComplete()){
 				bestEventTime = Math.min(splitEvents.get(eventIndex).getTime(ss),bestEventTime);
 			}
 		}
-
+		long eventTimeOfPB = splitEvents.get(eventIndex).getTime(getBestSession());
 		SplitTimeType type;
-		if(time-bestTime<0 && eventTime-bestEventTime<0){
+		//if(eventTime-bestEventTime<0){
+		//	type=SplitTimeType.GOLD;
+		//} else 
+			if(time-bestTime<0 && eventTime-eventTimeOfPB<0){
 			type= SplitTimeType.LN;
-		} else if(time-bestTime>0 && eventTime-bestEventTime<0){
+		} else if(time-bestTime>0 && eventTime-eventTimeOfPB<0){
 			type= SplitTimeType.LP;
-		} else if(time-bestTime<0 && eventTime-bestEventTime>0){
+		} else if(time-bestTime<0 && eventTime-eventTimeOfPB>0){
 			type= SplitTimeType.GN;
-		} else if(time-bestTime>0 && eventTime-bestEventTime>0){
+		} else if(time-bestTime>0 && eventTime-eventTimeOfPB>0){
 			type= SplitTimeType.GP;
 		} else {
 			type= SplitTimeType.NEUTRAL;
 		}
+		splitEvents.get(eventIndex).deltaEventTimeProperty().setType(type);
+		splitEvents.get(eventIndex).deltaEventTimeProperty().setSplitTime(eventTime-eventTimeOfPB);
+		splitEvents.get(eventIndex).deltaSplitTimeProperty().setType(type);
+		splitEvents.get(eventIndex).deltaSplitTimeProperty().setSplitTime(time-bestTime);
 		
-		splitEvents.get(eventIndex).currentSplitTimeProperty().setType(type);
+		for(int i = eventIndex+1; i<splitEvents.size(); i++){
+			splitEvents.get(i).deltaEventTimeProperty().setType(SplitTimeType.NEUTRAL);
+			splitEvents.get(i).deltaEventTimeProperty().setSplitTime(splitEvents.get(i).getTime(getBestSession()));
+			splitEvents.get(i).deltaSplitTimeProperty().setType(SplitTimeType.NEUTRAL);
+			splitEvents.get(i).deltaSplitTimeProperty().setSplitTime(getSumOfTimeUntilEvent(i,getBestSession()));
+		}
 	}
-	
 	
 	
 	private long getSumOfTimeUntilEvent(int eventIndex, SplitSession ss){
@@ -283,6 +289,17 @@ public class SplitCollection implements Serializable {
 		}
 	}
 	
+	public void deleteSession(int sessionIndex){
+		SplitSession ss = splitSessions.get(sessionIndex);
+		for(SplitEvent se : splitEvents){
+			se.removeSession(ss);
+		}
+		splitSessions.remove(sessionIndex);
+	}
+	
+	public int getSplitSessionSize(){
+		return splitSessions.size();
+	}
 	
 	
 	

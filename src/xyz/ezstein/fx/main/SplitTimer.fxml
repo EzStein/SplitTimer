@@ -73,7 +73,8 @@
 					<TableColumn fx:id="nameTableColumn" text="Name" sortable="false"/>
 					<TableColumn fx:id="iconTableColumn" text="Icon" sortable="false"/>
 					<TableColumn fx:id="timeTableColumn" text="Time" sortable="false"/>
-					<TableColumn fx:id="splitTimeTableColumn" text="Split Time" sortable="false"/>
+					<TableColumn fx:id="splitTimeTableColumn" text="Delta Split Time" sortable="false"/>
+					<TableColumn fx:id="eventTimeTableColumn" text="Delta Event Time" sortable="false"/>
 				</columns>
 			</TableView>
 			
@@ -82,7 +83,6 @@
 					<Insets top="10" bottom="10" left="10" right="10"/>
 				</padding>
 				<Label fx:id="timeLabel" text="00:00:00"/>
-				<Button fx:id="startStopButton" onAction="#startStopButtonClick" text="Start"/>
 			</HBox>
 		</VBox>
 	</center>

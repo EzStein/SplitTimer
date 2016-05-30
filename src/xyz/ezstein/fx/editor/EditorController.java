@@ -30,18 +30,7 @@ public class EditorController {
 		System.out.println("OPTIONS INITIALIZED");
 	}
 	
-	public void initializeAsGUI(Stage stage){
-		initializeAsGUI(stage, new SplitCollection());
-	}
-	
-	public void initializeAsGUI(Stage stage,SplitCollection splitCollection){
-		this.stage=stage;
-		this.splitCollection = splitCollection;
-		splitEventTable.setItems(splitCollection.splitEventsProperty());
-		stage.setOnCloseRequest(we->{
-			we.consume();
-			closeRequest(false);
-		});
+	public void initializeAsGUI(){
 		
 		
 		nameTableColumn.setCellValueFactory(new Callback<CellDataFeatures<SplitEvent, String>, ObservableValue<String>>(){
@@ -78,21 +67,6 @@ public class EditorController {
 				return new CustomTableRow();
 			}
 		});
-		
-		for(SplitSession session : splitCollection.getUnmodifiableSplitSessions()){
-			TableColumn<SplitEvent, Number> column = new TableColumn<SplitEvent, Number>(session.getDate().atZone(ZoneId.systemDefault()).toString());
-			column.setCellValueFactory((dataFeatures)->{
-				return new SimpleLongProperty(dataFeatures.getValue().getTime(session));
-			});
-			column.setCellFactory((col)->{
-				return new TimeTableCell();
-			});
-			LocalDateTime time = LocalDateTime.ofInstant(session.getDate(),ZoneId.systemDefault());
-			column.setText(time.format(DateTimeFormatter.ofPattern("hh:mm MMM/d/yyyy")));
-			splitEventTable.getColumns().add(column);
-			column.setSortable(false);
-		}
-		
 		splitEventTable.widthProperty().addListener(new ChangeListener<Number>()
 		{
 		    @Override
@@ -106,6 +80,30 @@ public class EditorController {
 		            }
 		        });
 		    }
+		});
+	}
+	
+	public void reinitialize(Stage stage,SplitCollection splitCollection){
+		this.stage=stage;
+		this.splitCollection = splitCollection;
+		splitEventTable.setItems(splitCollection.splitEventsProperty());
+		splitEventTable.getColumns().remove(2, splitEventTable.getColumns().size());
+		for(SplitSession session : splitCollection.getUnmodifiableSplitSessions()){
+			TableColumn<SplitEvent, Number> column = new TableColumn<SplitEvent, Number>(session.getDate().atZone(ZoneId.systemDefault()).toString());
+			column.setCellValueFactory((dataFeatures)->{
+				return new SimpleLongProperty(dataFeatures.getValue().getTime(session));
+			});
+			column.setCellFactory((col)->{
+				return new TimeTableCell();
+			});
+			LocalDateTime time = LocalDateTime.ofInstant(session.getDate(),ZoneId.systemDefault());
+			column.setText(time.format(DateTimeFormatter.ofPattern("hh:mm MMM/d/yyyy")));
+			splitEventTable.getColumns().add(column);
+			column.setSortable(false);
+		}
+		stage.setOnCloseRequest(we->{
+			we.consume();
+			closeRequest(false);
 		});
 	}
 	

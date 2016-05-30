@@ -18,15 +18,10 @@ public class PreferencesController {
 	@FXML private TextField splitTextField;
 	@FXML private TextField backgroundTextField;
 	@FXML private TextField delayTextField;
+	@FXML private TextField skipTextField;
+	@FXML private TextField undoTextField;
 	
-	public void initializeAsGUI(Stage stage){
-		this.stage=stage;
-		Properties props = Util.getProperties();
-		startTextField.setText(props.getProperty("start"));
-		stopTextField.setText(props.getProperty("stop"));
-		splitTextField.setText(props.getProperty("split"));
-		pauseTextField.setText(props.getProperty("pause"));
-		
+	public void initializeAsGUI(){
 		startTextField.setOnKeyReleased(ke->{
 			startTextField.setText(ke.getCode().toString());
 		});
@@ -39,7 +34,21 @@ public class PreferencesController {
 		stopTextField.setOnKeyReleased(ke->{
 			stopTextField.setText(ke.getCode().toString());
 		});
-		
+		skipTextField.setOnKeyReleased(ke->{
+			skipTextField.setText(ke.getCode().toString());
+		});
+		undoTextField.setOnKeyReleased(ke->{
+			undoTextField.setText(ke.getCode().toString());
+		});	
+	}
+	
+	public void reinitialize(Stage stage){
+		this.stage=stage;
+		Properties props = Util.getProperties();
+		startTextField.setText(props.getProperty("start"));
+		stopTextField.setText(props.getProperty("stop"));
+		splitTextField.setText(props.getProperty("split"));
+		pauseTextField.setText(props.getProperty("pause"));
 	}
 	
 	@FXML

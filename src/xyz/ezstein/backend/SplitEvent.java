@@ -29,7 +29,8 @@ public class SplitEvent implements Serializable {
 	private transient SimpleStringProperty icon;
 	private final TreeMap<SplitSession, Long> times;
 	private transient SimpleLongProperty currentTimeProperty;
-	private transient SimpleSplitTimeProperty currentSplitTimeProperty;
+	private transient SimpleSplitTimeProperty deltaSplitTimeProperty;
+	private transient SimpleSplitTimeProperty deltaEventTimeProperty;
 	
 	/**
 	 * Constructs a split event with a name and icon;
@@ -41,7 +42,8 @@ public class SplitEvent implements Serializable {
 		this.icon=new SimpleStringProperty(icon);
 		times=new TreeMap<SplitSession, Long>();
 		currentTimeProperty = new SimpleLongProperty(0);
-		currentSplitTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
+		deltaSplitTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
+		deltaEventTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
 	}
 	
 	/**
@@ -87,8 +89,16 @@ public class SplitEvent implements Serializable {
 	 * Returns the currentSplitTime property for edits by the splitCollection.
 	 * @return the currentSplitTime property for edits by the splitCollection.
 	 */
-	public SimpleSplitTimeProperty currentSplitTimeProperty(){
-		return currentSplitTimeProperty;
+	public SimpleSplitTimeProperty deltaSplitTimeProperty(){
+		return deltaSplitTimeProperty;
+	}
+	
+	/**
+	 * Returns the currentSplitTime property for edits by the splitCollection.
+	 * @return the currentSplitTime property for edits by the splitCollection.
+	 */
+	public SimpleSplitTimeProperty deltaEventTimeProperty(){
+		return deltaEventTimeProperty;
 	}
 	
 	/**
@@ -133,6 +143,10 @@ public class SplitEvent implements Serializable {
 		times.put(splitSession, time);
 	}
 	
+	public void removeSession(SplitSession ss){
+		times.remove(ss);
+	}
+	
 	
 	/**
 	 * Private method used for comparison only
@@ -153,7 +167,8 @@ public class SplitEvent implements Serializable {
 		this.name = new SimpleStringProperty((String) in.readObject());
 		this.icon = new SimpleStringProperty((String) in.readObject());
 		this.currentTimeProperty = new SimpleLongProperty(0);
-		this.currentSplitTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
+		this.deltaSplitTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
+		this.deltaEventTimeProperty = new SimpleSplitTimeProperty(new SplitTime());
 	}
 	
 	@Override
